@@ -35,6 +35,7 @@ type
         enchantPoints*: uint32
         armorRating*: uint32
     BipedObject = object
+        size*: uint
         kind*: uint32
         bnam*: Option[string] = none(string)
         cnam*: Option[string] = none(string)
@@ -319,7 +320,7 @@ type
         full_name*:Option[string] = none(string)
         script_name*: Option[string] = none(string)
     ActivatorRecord = ref object of TES3Record
-    PotionRecord = ref object of TES3Record
+    PotionRecord* = ref object of TES3Record
         icon_name*: Option[string] = none(string)
         data*: AlchemyData
         enchantments*: seq[Enchantment] = @[]
@@ -591,8 +592,8 @@ proc `%`*(r:Grid2D):JsonNode =
     result["x"] = %r.x
     result["y"] = %r.y
 
-proc readTag(s): string = s.readStr(TAGSIZE)
-proc peekTag(s): string = s.peekStr(TAGSIZE)
+proc readTag*(s): string = s.readStr(TAGSIZE)
+proc peekTag*(s): string = s.peekStr(TAGSIZE)
 
 template preamble(tag:string):untyped =
     checkTag(s.readTag(),tag)
@@ -603,7 +604,7 @@ template preamble(tag:string):untyped =
 
 #### Read TES File
 
-proc readStrField(s: Stream, tag: string): string =
+proc readStrField*(s: Stream, tag: string): string =
     checkTag(s.readStr(TAGSIZE), tag)
     let size = s.readUint32()
     result = stripEverything(s.readStr(size.int))
@@ -834,13 +835,14 @@ proc writeApparatus*(s;r:AlchemyApparatusRecord) =
     writepreamble(APPA)
     if r.icon_name.isSome():
         s.writeStrField(TEXT,r.icon_name.get())
-    if r.data.isSome():
+    if r.data.isSome(): # PROBABLY WILL NOT WORK???
         s.writeField(AADT,r.data.get())
 
 proc readBipedObject(s;tag:string): BipedObject =
     checkTag(s.readStr(TAGSIZE), tag)
     result = BipedObject()
     let size = s.readUint32()
+    result.size = size
     if size == SZ8:
         result.kind = s.readUint8()
     if size == SZ32:
@@ -880,6 +882,36 @@ proc readArmor*(s): ArmorRecord =
                 result.data = data
             else: break
 
+proc `%`*(r:BipedObject): JsonNode = 
+    result = newJObject()
+    result["size"] = %r.size
+    result["kind"] = %r.kind
+    if r.bnam.isSome():
+        result["bnam"] = %r.bnam
+    if r.cnam.isSome():
+        result["cnam"] = %r.cnam
+    
+
+
+proc `%`*(r:ArmorRecord): JsonNode = 
+    result = newJObject()
+    tojsonpreamble()
+    if r.icon_name.isSome():
+        result["icon_name"] = %r.icon_name.get()
+    result["data"] = %r.data
+    result["biped_objects"] = %r.biped_objects
+    result["enchantment_name"] = %r.enchantment_name
+
+proc writeArmor*(s;r:ArmorRecord) = 
+    writepreamble(ARMO)
+    if r.icon_name.isSome():
+        s.writeStrField(ITEX,r.icon_name.get())
+    s.writeField(AODT,r.data)
+
+    
+
+
+
 proc readBirthsign*(s): BirthSignRecord =
     result = BirthSignRecord(kind: BSGN)
     preamble($BSGN)
@@ -901,6 +933,14 @@ proc readBirthsign*(s): BirthSignRecord =
                 result.spell_ids.add(s.readStrField(NPCS))
             else: break
 
+proc `%`*(r:BirthSignRecord): JsonNode = 
+    result = newJObject()
+    tojsonpreamble()
+    if r.texture_file_name.isSome():
+        result["texture_file_name"] = %r.texture_file_name
+    if r.description.isSome():
+        result["description"] = %r.description
+    result["spell_ids"] = %r.spell_ids
 
 proc readBody*(s): BodyRecord =
     result = BodyRecord(kind: BODY)
@@ -1795,9 +1835,6 @@ proc readNPC(s):NPCRecord =
                 echo data.alarm
                 s.skip(3) # junk data
                 var flags = s.readUint32()
-                if result.id == "galbedir":
-                    echo flags
-                    assert(true == false,"breaking")
                 data.flags = parseAIFlags(flags)
                 result.ai_data = data
             of DODT:
@@ -2239,6 +2276,10 @@ proc skipTag(s) =
     let size = s.readUint32()
     s.skip(size.int + 8)
 
+proc readJSON*(fileName:string): TES3File =
+    let contents = readFile(fileName)
+    var jsoncontents = parseJson(contents)
+    return to(jsoncontents,TES3File)
 
 proc readPlugin*(fileName:string): TES3File = 
     result = TES3File()
