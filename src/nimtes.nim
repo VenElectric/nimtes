@@ -54,24 +54,12 @@ proc runTest(t:typedesc) =
    testObject(obj[])
 
 when isMainModule:
-    var s = newFileStream("Morrowind.esm")
-    var tag:string
-
-    while not s.atEnd():
-      tag = readTag(s)
-      if tag == "ACTI": 
-         let r = readRecord(s,ActivatorRecord)
-         echo r.id
-      else:
-         let size = readSize(s)
-         echo "skippin"
-         skip(s,size + 8)
-
    
+   let plugin = readPlugin("Morrowind.esm")
 
-   
+   let file = open("Morrowind.json",fmWrite)
 
-   
+   file.write(%*plugin)
 
   
 

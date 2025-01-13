@@ -371,7 +371,8 @@ type
         PCStart = (0x2, "PC Start")
         AlwaysSucceed = (0x4, "Always Succeeds")
     FilterFunctionKind* {.size: sizeof(char).} = enum
-        Function = 1
+        FNone = 0
+        Function
         Global
         Local
         Journal
@@ -431,9 +432,39 @@ macro enumStmts(a: typed): untyped =
             newLit(ai.strVal)
         ))))
 
+proc parseFilterFunctionKind*(x:char): FilterFunctionKind =
+    echo $x
+    case x:
+        of '1':
+            return Function
+        of '2': return Global
+        of '3': return Local
+        of '4': return Journal
+        of '5': return Item
+        of '6': return Dead
+        of '7': return NotID
+        of '8': return NotFaction
+        of '9': return NotClass
+        of 'A': return NotRace
+        of 'B': return NotCell
+        of 'C': return NotLocal
+        else: return FNone
+
+proc parseBodyFlags*(x:uint8): seq[BodyFlags] =
+    result = @[]
+    enumStmts(BodyFlags)
+
+proc parseRaceFlags*(x:uint32): seq[RaceFlags] =
+    result = @[]
+    enumStmts(RaceFlags)
+
 proc parseMagicEffectFlags*(x: uint32): seq[MagicEffectFlags] =
     result = @[]
     enumStmts(MagicEffectFlags)
+
+proc parsePathGridFlags*(x:uint16): seq[PathGridFlags] =
+    result = @[]
+    enumStmts(PathGridFlags)
 
 proc parseLightFlags*(x: uint32): seq[LightFlags] =
     result = @[]
@@ -465,6 +496,10 @@ proc parseCellDataFlags*(x:uint32): seq[CellDataFlags] =
 proc parseClassAutoCalcFlags*(x:uint32): seq[ClassAutoCalcFlags] =
     result = @[]
     enumStmts(ClassAutoCalcFlags)
+
+proc parseSpellFlags*(x:uint32): seq[SpellFlags] =
+    result = @[]
+    enumStmts(SpellFlags)
 
 proc toRecordFlags*(v:uint32): RecordFlags =
      case v:
