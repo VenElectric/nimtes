@@ -433,7 +433,6 @@ macro enumStmts(a: typed): untyped =
         ))))
 
 proc parseFilterFunctionKind*(x:char): FilterFunctionKind =
-    echo $x
     case x:
         of '1':
             return Function

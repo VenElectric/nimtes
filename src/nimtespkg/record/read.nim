@@ -1,148 +1,174 @@
-import std/[streams,strformat,macros,options]
-import constants,util
-import types/common
+import std/[streams, strformat, macros, options, tables]
+import constants
 
 using
-    s:Stream
+    s: Stream
 
-proc readTag*(s): string = readStr(s,TAGSIZE)
-proc peekTag*(s): string = peekStr(s,TAGSIZE)
-proc skip*(s;pos:Natural) = setPosition(s,getPosition(s) + pos)
+proc readTag*(s): string = readStr(s, TAGSIZE)
+proc peekTag*(s): string = peekStr(s, TAGSIZE)
+proc skip*(s; pos: Natural) = setPosition(s, getPosition(s) + pos)
 
-proc readSize*(s):int = int(readUint32(s))
+proc readSize*(s): uint32 = readUint32(s)
 
-proc checkTag*(a, b: string) = assert(a == b, fmt"Tag {a} does not match Tag {b}")
-proc checkSize*(a, b: int) = assert(a == b,fmt"Size of {a} does not match Size of {b}")
 
-proc consumeTag(s) = discard readTag(s)
+proc checkSize*(a, b: int) = assert(a == b,
+        fmt"Size of {a} does not match Size of {b}")
 
-proc filter_tags*(s): seq[tuple[start_pos:int,end_pos:int]] = 
+proc consumeTag*(s) = discard readTag(s)
+
+proc filter_tags*(s): seq[tuple[start_pos: int; end_pos: int]] =
     result = @[]
     while not s.atEnd():
         let start = getPosition(s)
-        skip(s,4)
+        skip(s, 4)
         let len = readUint32(s)
-        skip(s,len + 8)
-        result.add((start_pos:start,end_pos:getPosition(s)))
+        skip(s, len + 8)
+        result.add((start_pos: start, end_pos: getPosition(s)))
 
-proc readField*(s;dst: var string)
-proc readField*(s;dst: var uint8)
-proc readField*(s;dst: var int8)
-proc readField*(s;dst: var uint16)
-proc readField*(s;dst: var uint32)
-proc readField*(s;dst: var int32)
-proc readField*(s;dst: var float32)
-proc readField[T: object|tuple](s;dst: var T)
-proc readField*[T](s;dst: var Option[T])
-proc readField*[T:enum](s;dst: var set[T])
-proc readField*(s;dst: var set[uint8])
+proc readField(s; dst: var int8)
+proc readField(s; dst: var int16)
+proc readField(s; dst: var int32)
+proc readField(s; dst: var int64)
+proc readField(s; dst: var uint8)
+proc readField(s; dst: var uint16)
+proc readField(s; dst: var uint32)
+proc readField(s; dst: var uint64)
+proc readField(s; dst: var float32)
+proc readField(s; dst: var float64)
+proc readField(s; dst: var string)
+proc readField[T](s; dst: var Option[T])
+proc readField[S, T](s; dst: var array[S, T])
+proc readField[T](s; dst: var seq[T])
+proc readField[T: object|tuple](s; dst: var T)
 
-proc readField*(s;dst: var string) =
-    let sz = readSize(s)
-    dst = stripEverything(readStr(s,sz))
-
-proc readField*(s;dst: var uint8) =
-    checkSize(readSize(s),SZ8)
-    dst = readUint8(s)
-
-proc readField*(s;dst: var int8) =
-    checkSize(readSize(s),SZ8)
-    dst = readInt8(s)
-
-proc readField*(s;dst: var uint16) =
-    checkSize(readSize(s),SZ16)
-    dst = readUint16(s) 
-
-proc readField*(s;dst: var uint32) =
-    checkSize(readSize(s),SZ32)
-    dst = readUint32(s)
-
-proc readField*(s;dst: var int32) =
-    checkSize(readSize(s),SZ32)
-    dst = readInt32(s) 
-
-proc readField*(s;dst: var float32) =
-    checkSize(readSize(s),SZ32)
-    dst = readFloat32(s)
-
-proc readField*[T:enum](s;dst: var set[T]) = discard
-proc readField*(s;dst: var set[uint8]) = discard
-    
-
-# record
-#   fields
-#       Type: string,uint8,uint16,uint32,int8,int32,float32,object
-# read a field
-# read the tag/discard it
-# read the size/discard it
-# read the value 
-# assign the value to the result
-
-proc createObjectReadFields(strm,dst,typeNode,typeSym:NimNode) = 
-    case typeNode.kind:
-        of nnkEmpty: discard
-        of nnkRecList,nnkTupleTy: discard
-        of nnkIdentDefs: discard
-        of nnkRecCase: discard
-        of nnkOfBranch,nnkElse: discard
-        of nnkObjectTy: discard
-        else: discard
-
-macro readObjectImpl[T: object|tuple](s;dst: var T) = 
-    let tsym = getTypeInst(dst)
-    result = newStmtList()
-    if hasCustomPragma(dst,tag):
-        discard
-    else:
-        discard
-
-
-proc readField[T: object|tuple](s;dst: var T) = 
-    discard readSize(s)
-    readObjectImpl(s,dst)
-
-proc readField*[T](s;dst: var Option[T]) = 
-    discard readSize(s)
-    when T is ref: 
+proc readField(s; dst: var int8) =
+    dst = s.readInt8()
+proc readField(s; dst: var int16) =
+    dst = s.readInt16()
+proc readField(s; dst: var int32) =
+    dst = s.readInt32()
+proc readField(s; dst: var int64) =
+    dst = s.readInt64()
+proc readField(s; dst: var uint8) =
+    dst = s.readUint8()
+proc readField(s; dst: var uint16) =
+    dst = s.readUint16()
+proc readField(s; dst: var uint32) =
+    dst = s.readUint32()
+proc readField(s; dst: var uint64) =
+    dst = s.readUint64()
+proc readField(s; dst: var float32) =
+    dst = s.readFloat32()
+proc readField(s; dst: var float64) =
+    dst = s.readFloat64()
+proc readField(s; dst: var string) =
+    let size = readSize(s)
+    dst = s.readStr(int(size))
+proc readField[T](s; dst: var Option[T]) =
+    when T is ref:
         dst = some(new(T))
     else:
         dst = some(default(T))
-    readField(s,dst.get)
+    readField(s, dst.get)
+# proc readField[T](s;dst: var tuple[T,T,T]) = discard
+proc readField[T](s; dst: var seq[T]) = discard
+
+proc readField[S, T](s; dst: var array[S, T]) =
+    for i in countup(len(dst)-1):
+        readField(s, dst[i])
 
 
-proc tagCaseStmt(dstNode,s,kind,impl: NimNode) =
-    let caseStmt = newTree(nnkCaseStmt,kind)
-    let fields = impl[2]
-    for field in fields:
-        let fSym = field[0]
-        let pTag = getCustomPragmaVal(field,tag)
-        let ofBranch = newTree(nnkOfBranch,newLit(pTag))
-        ofBranch.add quote do:
-            consumeTag(`s`)
-            readField(`s`,`impl`.`fSym`)
-    caseStmt.add(newTree(nnkElse,newNimNode(nnkBreakStmt)))
-    dstNode.add(caseStmt)
+proc foldObject(s; dst, typeNode, tmpSym: NimNode) =
+    case typeNode.kind
+    of nnkEmpty:
+        discard
+    of nnkRecList, nnkTupleTy:
+        for it in typeNode:
+            foldObject(s, dst, it, tmpSym)
 
+    of nnkIdentDefs:
+        typeNode.expectLen 3
+        let fieldSym = typeNode[0]
+        let fieldType = typeNode[1]
+        dst.add quote do:
+            readField(`s`, `tmpSym`.`fieldSym`)
 
-macro readRecordImpl[T](s;record:var T) = 
-    let typeSym = getTypeInst(record)
-    let impl = getTypeImpl(typeSym)
+    of nnkRecCase:
+        let kindSym = typeNode[0][0]
+        let kindNameLit = newLit(kindSym.strVal)
+        let kindPathLit = newLit("." & kindSym.strVal)
+        let kindType = typeNode[0][1]
+        let kindOffsetLit = newLit(uint(getOffset(kindSym)))
+
+        dst.add quote do:
+            var kindTmp: `kindType`
+            readField(`s`, kindTmp)
+            `tmpSym`.`kindSym` = kindTmp
+        dst.add nnkCaseStmt.newTree(nnkDotExpr.newTree(tmpSym, kindSym))
+        for i in 1 ..< typeNode.len:
+            foldObject(s, dst, typeNode[i], tmpSym)
+
+    of nnkOfBranch, nnkElse:
+        let ofBranch = newNimNode(typeNode.kind)
+        for i in 0 ..< typeNode.len-1:
+            ofBranch.add copyNimTree(typeNode[i])
+        let dstInner = newNimNode(nnkStmtListExpr)
+        foldObject(s, dstInner, typeNode[^1], tmpSym)
+
+    of nnkObjectTy:
+        typeNode[0].expectKind nnkEmpty
+        typeNode[1].expectKind {nnkEmpty, nnkOfInherit}
+        if typeNode[1].kind == nnkOfInherit:
+            let base = typeNode[1][0]
+            var impl = getTypeImpl(base)
+            while impl.kind in {nnkRefTy, nnkPtrTy}:
+                impl = getTypeImpl(impl[0])
+                foldObject(s, dst, impl, tmpSym)
+        let body = typeNode[2]
+        foldObject(s, dst, body, tmpSym)
+    else:
+        error("unhandled kind: " & $typeNode.kind, typeNode)
+
+macro readObjectImpl[T](s; dst: var T) =
+    let typeSym = getTypeInst(dst)
     result = newStmtList()
-    result.add quote do:
-        `record`.size = readUint32(s)
-        skip(s,SZ32)
-        skip(s,SZ32)
-        # `record`.flags = readFlags(s)
-        var kind: string
+    if typeSym.kind in {nnkTupleTy, nnkTupleConstr}:
+        foldObject(s, result, typeSym, dst)
+    else:
+        foldObject(s, result, typeSym.getTypeImpl, dst)
 
-        while true:
-            kind = peekTag(s)
-            tagCaseStmt(result,s,kind,impl)
+# reading objects
+# difference between a record and say a data attribute
 
-proc recordProxy[T](s;record: var T) = readRecordImpl(s,record)
-        
 
-proc readRecord*[T](s;t:typedesc[T]): T = 
-    var rec = new(t)
-    recordProxy(s,rec)
-    return rec
+proc readField[T: object|tuple](s; dst: var T) =
+    readObjectImpl(s, dst)
+
+type
+    TES3Record[T: object] = object
+        size*: uint32
+        flags*: uint32
+        data*: T
+    ActivatorRecord = object
+        id*: string
+        model_name*: Option[string]
+        full_name*: Option[string]
+        script_name*: Option[string]
+
+proc readRecord*[T](s; dst: typedesc[T]): TES3Record[T] =
+    result = default(TES3Record)
+    result.data = default(T)
+    consumeTag(s)
+    result.size = readSize(s)
+    skip(s, 4)
+    result.flags = readUint32()
+    # readField needs to skip over the preamble fields
+    # might be easier to include this in readObjectImpl?
+    # or make the preamble fields their own object that is implanted into Records
+    readField(s, result.data)
+
+# need to pass in a typedesc with the corresponding tag
+# this seems to be overdoing it.
+# If we directly use the object, we can then easily use that
+# rather than trying to rig TES3 -> dict -> object
+

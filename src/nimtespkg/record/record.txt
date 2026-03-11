@@ -140,6 +140,9 @@ type
         flee*: uint8
         alarm*: uint8
         flags*: seq[AIDataFlags]
+    AIPActivate = object
+        name: string
+        unknown: uint8
     AIPackage = object
         case kind*: AIPackageKind
             of AIActivate:
@@ -410,10 +413,10 @@ type
         info_name*: string
         previous_info_id*: string
         next_info_id*: string
-        data*: Option[InfoData] = none(InfoData)
-        actor_name*: Option[string] = none(string)
-        race_name*: Option[string] = none(string)
-        class_name*: Option[string] = none(string)
+        data*: Option[InfoData]
+        actor_name*: Option[string]
+        race_name*: Option[string] 
+        class_name*: Option[string]
         faction_name*: Option[string] = none(string)
         cell_name*: Option[string] = none(string)
         player_faction*: Option[string] = none(string)
@@ -508,12 +511,12 @@ type
         chance*:uint8
     RegionRecord = ref object of TES3Record
         weather_chances*: WeatherChances
-        sleep_creature*: Option[string] = none(string)
+        sleep_creature*: Option[string]
         map_color*: RGBA
         sound_chances*: seq[SoundChance] = @[]
     RepairToolRecord = ref object of TES3Record
         data*: RepairData
-        icon_name*: Option[string] = none(string)
+        icon_name*: Option[string]
     ScriptVariables = object 
         shorts*:seq[string]
         longs*:seq[string]
@@ -526,7 +529,7 @@ type
     SkillRecord = ref object of TES3Record
         index*: uint32
         data*: SkillData
-        description*: Option[string] = none(string)
+        description*: Option[string]
     SoundGeneratorRecord = ref object of TES3Record
         name*: string # replace with id
         data*: uint32
@@ -2296,6 +2299,7 @@ proc readHeader*(s:Stream): TES3HeaderRecord =
         case tag:
             of HEDR:
                 checkTag(s.readTag(),HEDR)
+                echo s.peekUint32()
                 s.skip(SZ32)
                 result.header.version = s.readFloat32()
                 result.header.flags = s.readUint32()
