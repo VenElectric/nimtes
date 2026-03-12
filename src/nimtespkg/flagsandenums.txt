@@ -1,0 +1,598 @@
+ALL
+    Flags
+        0x0020 = Deleted (used internally, usually flagged in files by DELE field instead)
+        0x0400 = Persistent reference
+        0x0800 = Initially disabled (only used internally, but see CELL)
+        0x2000 = Blocked
+
+    MINOR/MAJOR SKILL VALUES?
+
+    BIPED OBJECT?
+
+    ATTRIBUTES?
+
+    RANGE
+ALCH
+    Alchemy data
+        float32 - Weight
+        uint32 - Value
+        uint32 - Flags
+            0x1 = Autocalc
+    uint16 - Effect index
+    int8 - Skill affected (-1 if not applicable) 
+    int8 - Attribute affected (-1 if not applicable)
+    uint32 - Range
+        0 = Self
+        1 = Touch
+        2 = Target
+APPA
+    uint32 - Type
+        0 = Mortar and Pestle
+        1 = Alembic
+        2 = Calcinator
+        3 = Retort
+
+ARMO 
+    uint32 - Type
+        0 = Helmet
+        1 = Cuirass
+        2 = Left Pauldron
+        3 = Right Pauldron
+        4 = Greaves
+        5 = Boots
+        6 = Left Gauntlet
+        7 = Right Gauntlet
+        8 = Shield
+        9 = Left Bracer
+        10 = Right Bracer
+    Biped object (Note: The only field size currently in use is a uint8, but the internal coding allows for a uint32 here, using only the lowest byte of it. This may be from an earlier file format that's no longer used.)
+        0 = Head
+        1 = Hair
+        2 = Neck
+        3 = Cuirass
+        4 = Groin
+        5 = Skirt
+        6 = Right Hand
+        7 = Left Hand
+        8 = Right Wrist
+        9 = Left Wrist
+        10 = Shield
+        11 = Right Forearm
+        12 = Left Forearm
+        13 = Right Upper Arm
+        14 = Left Upper Arm
+        15 = Right Foot
+        16 = Left Foot
+        17 = Right Ankle
+        18 = Left Ankle
+        19 = Right Knee
+        20 = Left Knee
+        21 = Right Upper Leg
+        22 = Left Upper Leg
+        23 = Right Pauldron
+        24 = Left Pauldron
+        25 = Weapon
+        26 = Tail
+
+BODY
+    Body Part Data
+        uint8 - Part
+            0 = Head
+            1 = Hair
+            2 = Neck
+            3 = Chest
+            4 = Groin
+            5 = Hand
+            6 = Wrist
+            7 = Forearm
+            8 = Upperarm
+            9 = Foot
+            10 = Ankle
+            11 = Knee
+            12 = Upperleg
+            13 = Clavicle
+            14 = Tail
+        uint8 - Vampire
+        uint8 - Flags
+            1 = Female
+            2 = Playable
+        uint8 - PartType
+            0 = Skin
+            1 = Clothing
+            2 = Armor
+
+BOOK
+    Book data
+        float32 - Weight
+        uint32 - Value
+        uint32 - Flags
+            0x1 = Scroll
+        int32 - Skill ID (for skill books; otherwise -1)
+        uint32 - Enchantment points
+
+CELL 
+    uint32 - Flags
+        0x01 = Interior
+        0x02 = Has Water
+        0x04 = Illegal to Sleep here
+        0x80 = Behave like exterior (Tribunal)
+
+CLAS 
+    Class data
+        uint32[2] - Primary Attributes
+            0 = Strength
+            1 = Intelligence
+            2 = Willpower
+            3 = Agility
+            4 = Speed
+            5 = Endurance
+            6 = Personality
+            7 = Luck
+        uint32 - Specialization
+            0 = Combat
+            1 = Magic
+            2 = Stealth
+        uint32[5][2] - 5 sets of alternating minor/major skills. Values can be found on the Skills page.
+        uint32 = Flags
+            1 = Playable
+        uint32 - Auto-calc Flags
+            0x00001 = Weapon
+            0x00002 = Armor
+            0x00004 = Clothing
+            0x00008 = Books
+            0x00010 = Ingredients
+            0x00020 = Picks
+            0x00040 = Probes
+            0x00080 = Lights
+            0x00100 = Apparatus
+            0x00200 = Repair Items
+            0x00400 = Misc
+            0x00800 = Spells
+            0x01000 = Magic Items
+            0x02000 = Potions
+            0x04000 = Training
+            0x08000 = Spellmaking
+            0x10000 = Enchanting
+            0x20000 = Repair
+
+CLOT
+    Clothing data
+        uint32 - Type
+            0 = Pants
+            1 = Shoes
+            2 = Shirt
+            3 = Belt
+            4 = Robe
+            5 = Right Glove
+            6 = Left Glove
+            7 = Skirt
+            8 = Ring
+            9 = Amulet
+        float32 - Weight
+        uint16 - Value
+        uint16 - Enchantment Points
+    Biped object (Note: The only field size currently in use is a uint8, but the internal coding allows for a uint32 here, using only the lowest byte of it. This may be from an earlier file format that's no longer used.)
+        0 = Head
+        1 = Hair
+        2 = Neck
+        3 = Cuirass
+        4 = Groin
+        5 = Skirt
+        6 = Right Hand
+        7 = Left Hand
+        8 = Right Wrist
+        9 = Left Wrist
+        10 = Shield
+        11 = Right Forearm
+        12 = Left Forearm
+        13 = Right Upper Arm
+        14 = Left Upper Arm
+        15 = Right Foot
+        16 = Left Foot
+        17 = Right Ankle
+        18 = Left Ankle
+        19 = Right Knee
+        20 = Left Knee
+        21 = Right Upper Leg
+        22 = Left Upper Leg
+        23 = Right Pauldron
+        24 = Left Pauldron
+        25 = Weapon
+        26 = Tail
+
+CONT
+    Flags
+        0x1 = Organic
+        0x2 = Respawns (organic only)
+        0x8 = Unknown (always set)
+
+CREA 
+    uint32 - Type
+        0 = Creature
+        1 = Daedra
+        2 = Undead
+        3 = Humanoid
+    uint32 - Level
+    uint32[8] - Attributes (in order of Attribute ID, as found on Morrowind:Attributes)
+
+    Creature flags
+        0x0001 = Biped
+        0x0002 = Respawn
+        0x0004 = Weapon and shield
+        0x0008 = None
+        0x0010 = Swims
+        0x0020 = Flies
+        0x0040 = Walks
+        0x0048 = Default flags
+        0x0080 = Essential
+        0x0400 = Blood Type 1 (Dust)
+        0x0800 = Blood Type 2 (Sparks)
+        0x0C00 = Blood Type 3
+        0x1000 = Blood Type 4
+        0x1400 = Blood Type 5
+        0x1800 = Blood Type 6
+        0x1C00 = Blood Type 7
+        Blood is stored as a value from 0-7, shifted 10 bits in. 
+        The actual names, textures, and models for the blood are not hardcoded 
+        and are stored in Morrowind.ini. By default the game uses values of Red (0), 
+        Dust (1) and Sparks (2).
+
+    AI data
+        uint8 Hello
+        uint8 Unknown
+        uint8 Fight
+        uint8 Flee
+        uint8 Alarm
+        [3]uint8 alignment padding (junk)
+        uint32 Flags
+            0x00001 = Weapon
+            0x00002 = Armor
+            0x00004 = Clothing
+            0x00008 = Books
+            0x00010 = Ingredient
+            0x00020 = Picks
+            0x00040 = Probes
+            0x00080 = Lights
+            0x00100 = Apparatus
+            0x00200 = Repair Items
+            0x00400 = Misc
+            0x00800 = Spells
+            0x01000 = Magic Items
+            0x02000 = Potions
+            0x04000 = Training
+            0x08000 = Spellmaking
+            0x10000 = Enchanting
+            0x20000 = Repair
+        Remaining bits appear to be filled with junk data
+
+DIAL 
+    Dialogue type
+        0 = Regular Topic
+        1 = Voice
+        2 = Greeting
+        3 = Persuasion
+        4 = Journal
+
+ENCH
+    uint32 - Type
+        0 = Cast Once
+        1 = Cast Strikes
+        2 = Cast when Used
+        3 = Constant Effect
+    uint32 - Enchantment Cost
+    uint32 - Charge
+    uint32 - Flags
+        0x1 = Autocalc
+    Remaining bits appear to be filled with junk data
+    
+    Enchantments
+    uint16 - Effect index
+    int8 - Skill affected (-1 if not applicable)
+    int8 - Attribute affected (-1 if not applicable)
+    uint32 - Range
+        0 = Self
+        1 = Touch
+        2 = Target
+    uint32 - Area
+    uint32 - Duration
+    uint32 - Magnitude Min
+    uint32 - Magnitude Max
+
+FACT 
+    Faction data
+        uint32[2] - Attributes
+        struct[10] - Rank data
+        uint32[2] - Attribute modifiers
+        uint32 - Primary skill modifier
+        uint32 - Favored skill modifier
+        uint32 - Faction reaction modifier
+        int32[7] - Skills - use Skill values found on Skills, ignoring any value of -1.
+        uint32 - Flags
+            1 = Hidden from Player
+    
+INFO
+    Info data (always emitted except for deleted records)
+        uint8 - Dialogue type (duplicates parent DIAL's DATA value)
+        uint8[3] - Unused
+        uint32 - Disposition / Journal index
+        int8 - Rank (-1 for N/A)
+        int8 - Gender
+            -1 = None
+            0 = Male
+            1 = Female
+        int8 - PCRank (-1 for N/A)
+        uint8 - Unused
+    
+    Strings for the Function/Variable list
+        char - Index ('0' to '5')
+        char - Type ('1' to 'C', hex digit)
+            '1' = Function
+            '2' = Global
+            '3' = Local
+            '4' = Journal
+            '5' = Item
+            '6' = Dead
+            '7' = Not ID
+            '8' = Not Faction
+            '9' = Not Class
+            'A' = Not Race
+            'B' = Not Cell
+            'C' = Not Local
+        char[2] - Details
+            '00' to '72' = Function: function index
+            'fX' = Global/Local/Not Local: Value is a float in FLTV
+            'lX' = Global/Local/Not Local: Value is a long in INTV
+            'sX' = Global/Local/Not Local: Value is a short in INTV (serves only as a value range - INTV is always a uint32)
+            'JX' = Journal
+            'IX' = Item
+            'DX' = Dead
+            'XX' = Not ID
+            'FX' = Not Faction
+            'CX' = Not Class
+            'RX' = Not Race
+            'LX' = Not Cell
+        char - Operator
+            '0' = '='
+            '1' = '!='
+            '2' = '>'
+            '3' = '>='
+            '4' = '<'
+            '5' = '<='
+        char[] - Name: Except for functions (which require no further information), 
+        everything after the fifth character is the ID for the global, local, journal, etc.
+
+INGR 
+    Ingredient data
+        float32 - Weight
+        uint32 - Value
+        int32[4] - Effect index (-1 if unused) <------
+        int32[4] - Skill ID (only if effect supports it; otherwise 0 or -1)
+        int32[4] - Attribute ID (only if effect supports it; otherwise 0 or -1) <-----?
+
+LEVC
+    Flags
+        0x1 = Calculate from all levels <= PC's level
+
+LEVI 
+    Flags
+        0x1 = Calculate for each item in count
+        0x2 = Calculate from all levels <= PC's level
+
+LIGH 
+    Light data
+        float32 - Weight
+        uint32 - Value
+        int32 - Time
+        uint32 - Radius
+        rgb - Color
+        uint32 - Flags
+            0x0001 = Dynamic
+            0x0002 = Can carry
+            0x0004 = Negative
+            0x0008 = Flicker
+            0x0010 = Fire
+            0x0020 = Off by default
+            0x0040 = Flicker slow
+            0x0080 = Pulse
+            0x0100 = Pulse slow
+
+MGEF
+    Magic effect data
+        uint32 - Spell school
+            0 = Alteration
+            1 = Conjuration
+            2 = Destruction
+            3 = Illusion
+            4 = Mysticism
+            5 = Restoration
+        float32 - BaseCost
+        uint32 - Flags
+            0x00001 = Targets Skill
+            0x00002 = Targets Attribute
+            0x00004 = No Duration
+            0x00008 = No Magnitude
+            0x00010 = Harmful
+            0x00020 = Continuous VFX
+            0x00040 = Can Cast On Self
+            0x00080 = Can Cast On Touch
+            0x00100 = Can Cast On Target
+            0x00200 = Spellmaking
+            0x00400 = Enchanting
+            0x00800 = Negative Lighting
+            0x01000 = Applied Once
+            0x02000 = Stealth
+            0x04000 = Cannot Recast
+            0x08000 = Illegal Daedra
+            0x10000 = Unreflectable
+            0x20000 = Linked To Caster
+        uint32 - Red
+        uint32 - Green
+        uint32 - Blue
+        float32 - SpeedX
+        float32 - SizeX
+        float32 - SizeCap
+
+NPC_
+    12-byte version (autocalc flag set)
+
+        uint16 - Level
+        uint8 - Disposition
+        uint8 - Reputation
+        uint8 - Rank
+        uint8[3] - alignment padding (junk)
+        uint32 - Gold
+    52-byte version (autocalc flag clear)
+
+        uint16 - Level
+        uint8[8] - Attributes (in order of Attribute ID, as found on Morrowind:Attributes)
+        uint8[27] - Skills (in order of Skill ID, as found on Morrowind:Skills)
+        uint8 - alignment padding (junk)
+        uint16 - Health
+        uint16 - Spell points
+        uint16 - Fatigue
+        uint8 - Disposition
+        uint8 - Reputation
+        uint8 - Rank
+        uint8 - alignment padding (junk)
+        uint32 - Gold
+    
+    NPC flags
+        0x0001 = Female
+        0x0002 = Essential
+        0x0004 = Respawn
+        0x0008 = Unknown (always set)
+        0x0010 = Autocalc
+        0x0400 = Blood Texture: Skeleton
+        0x0800 = Blood Texture: Metal Sparks
+
+    uint32 Flags
+        0x00001 = Weapon
+        0x00002 = Armor
+        0x00004 = Clothing
+        0x00008 = Books
+        0x00010 = Ingredients
+        0x00020 = Picks
+        0x00040 = Probes
+        0x00080 = Lights
+        0x00100 = Apparatus
+        0x00200 = Repair Items
+        0x00400 = Misc
+        0x00800 = Spells
+        0x01000 = Magic Items
+        0x02000 = Potions
+        0x04000 = Training
+        0x08000 = Spellmaking
+        0x10000 = Enchanting
+        0x20000 = Repair
+        Remaining bits appear to be filled with junk data
+
+PGRD
+    uint16 - Flags. The values below are the only ones accessible via the TESCS; other values exist between the range of 0x1 and 0x4000 (with the exception of 0x4) but appear to be deprecated outside of cell [0, 0].
+        0x80 = 128 granularity
+        0x100 = 256 granularity
+        0x200 = 512 granularity
+        0x400 = 1024 granularity (Appears to be the default)
+        0x800 = 2048 granularity
+        0x1000 = 4096 granularity
+    
+    uint8 - Flags
+        0x01 = Autogenerated
+
+RACE
+    Race data
+        struct[7] - Skill bonuses
+            int32 - Skill ID (-1 for empty) <----
+            int32 - Bonus
+        uint32[8][2] = Attributes, **** (the first dimension being ordered by Attribute ID, as found on Morrowind:Attributes, and the second dimension by gender)
+        float32[2] = Height (one for each gender, as with Weight below)
+        float32[2] = Weight
+        uint32 = Flags
+            0x1 = Playable
+            0x2 = Beast Race
+
+SKIL
+    Skill data
+        uint32 - Attribute <-----
+        uint32 - Specialization
+        float[4] - Use values
+
+SNDG
+    Sound type data
+        0 = Left Foot
+        1 = Right Foot
+        2 = Swim Left
+        3 = Swim Right
+        4 = Moan
+        5 = Roar
+        6 = Scream
+        7 = Land
+
+SPEL 
+    Spell Data
+        uint32 - Type
+            0 = Spell
+            1 = Ability
+            2 = Blight
+            3 = Disease
+            4 = Curse (unused)
+            5 = Power
+        uint32 - SpellCost
+        uint32 - Flags
+            0x1 = AutoCalc
+            0x2 = PC Start
+            0x4 = Always Succeeds
+    
+    Enchantments
+        uint16 - Effect index
+        int8 - Skill affected (-1 if not applicable)
+        int8 - Attribute affected (-1 if not applicable)
+        uint32 - Range
+            0 = Self
+            1 = Touch
+            2 = Target
+        uint32 - Area
+        uint32 - Duration
+        uint32 - Magnitude Min
+        uint32 - Magnitude Max
+
+TES3
+    Header
+        float32 - Version (1.2 for Morrowind, 1.3 for Bloodmoon and Tribunal)
+        uint32 - Flags
+        0x1 = file should be treated as a master, regardless of the file extension
+        char[32] - Company name string
+        char[256] - File description
+        uint32 - Number of records after this one
+
+WEAP
+    Weapon data
+        float32 - Weight
+        uint32 - Value
+        uint16 - Type
+            0 = ShortBladeOneHand
+            1 = LongBladeOneHand
+            2 = LongBladeTwoClose
+            3 = BluntOneHand
+            4 = BluntTwoClose
+            5 = BluntTwoWide
+            6 = SpearTwoWide
+            7 = AxeOneHand
+            8 = AxeTwoHand
+            9 = MarksmanBow
+            10 = MarksmanCrossbow
+            11 = MarksmanThrown
+            12 = Arrow
+            13 = Bolt
+        uint16 - Health
+        float32 - Speed
+        float32 - Reach
+        uint16 - Enchantment Points
+        uint8 - Chop Minimum
+        uint8 - Chop Maximum
+        uint8 - Slash Minimum
+        uint8 - Slash Maximum
+        uint8 - Thrust Minimum
+        uint8 - Thrust Maximum
+        uint32 - Flags
+            0x1 = Ignore Normal Weapon Resistance
+            0x2 = Silver

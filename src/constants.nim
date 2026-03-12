@@ -5,7 +5,7 @@ const TES3RecordLabels = ["ACTI", "ACLH", "APPA", "ARMO", "BODY", "BOOK",
         "REPA", "SCPT", "SKIL", "SNDG", "SOUN",
         "SPEL", "SSCR", "STAT", "TES3", "WEAP"]
 
-const AUTO_CALC* = 0x1
+const AUTO_CALC*:uint32 = 0x1
 
 const TAGSIZE* = 4
 const AUTHOR_SIZE*:uint32 = 32
