@@ -1,0 +1,170 @@
+BIPEDOBJECT requires check on size (used for multiple record types)
+Maybe we can also do something similar for nested objects
+proc readBipedObject(s;tag:string): BipedObject =
+    checkTag(s.readTag(), tag)
+    result = BipedObject()
+    let size = s.readUint32()
+    result.size = size
+    if size == SZ8:
+        result.kind = s.readUint8()
+    if size == SZ32:
+        result.kind = s.readUint32()
+    var tag = s.peekTag()
+    if tag == BNAM:
+        result.bnam = s.readStrField(BNAM).some
+    tag = s.peekTag()
+    if tag == CNAM:
+        result.cnam = s.readStrField(CNAM).some
+
+BODY has a skip variable in BodyPartData, other structs do as well,
+INFO
+PGRD -> PGRP
+easily solved with a value in the object that doesn't do anything
+var data = BodyPartData()
+                checkTag(s.readTag(),BYDT)
+                s.skip(4)
+                data.part = BodyPart(s.readUint8())
+                data.vampire = s.readUint8()
+                data.flags = parseBodyFlags(s.readUint8())
+                data.partKind = BodyPartKind(s.readUint8())
+                result.data = data
+
+CELL has two FRMR tags for different reference lists
+of NAM0:
+     result.count_temp_children = s.readUint32Field(NAM0).some
+of FRMR:
+    if result.count_temp_children.isSome():
+        result.temporary_references.add(s.readFormRef())
+    else:
+        result.form_references.add(s.readFormRef())
+
+CONT -> NPCO has a sized string (32), multiple other structs use this as well
+solved with zsize pragma
+SCRI->SCHD
+
+CREA,NPC AI Packages (i.e. AI_A,AI_E, ETC...)
+these AI packages are in order and have different variables 
+depending on the package.
+might do
+AI_E = object
+    etc.
+    etc.
+
+AI_A = object
+    etc.
+    etc.
+
+AIPkg = object
+case kind: AIPackageKind
+of etc: ai_e: AI_E
+
+must have these added in order that they were found
+of AIE,AIA,etc..:
+    case tag:
+    etc...
+special case
+
+GLOBAL and others
+might have dele record, add to object
+
+
+INFO -> SCVR may have intv or fltv:
+of SCVR:
+checkTag(s.readTag(),SCVR)
+let size = s.readUint32()
+var filter = FilterData()
+filter.index = s.readChar()
+filter.kind = parseFilterFunctionKind(s.readChar()) <--- not needed will parse kind after object is parsed using procs
+filter.details = s.readStr(2)
+filter.op = s.readChar()
+filter.name = s.readStrStripped(size.int - 5)
+tag = s.peekTag()
+if tag == INTV:
+    filter.comparison_int = s.readUint32Field(INTV).some
+elif tag == FLTV:
+    filter.comparison_float = s.readFloat32Field(FLTV).some
+
+NPC_ requires custom parsing for NPDT
+of NPDT:
+var data:NPCData
+checkTag(s.readTag(),NPDT)
+let size = s.readUint32()
+data.level = s.readUint16()
+if size == 52:
+    var attr: AttributeArray
+    var skills: SkillArray
+    s.read(attr)
+    s.read(skills)
+    data.attributes = attr.some
+    data.skills = skills.some
+    s.skip(1)
+    data.health = s.readUint16().some
+    data.spell_points = s.readUint16().some
+    data.fatigue = s.readUint16().some
+data.disposition = s.readUint8()
+data.reputation = s.readUint8()
+data.rank = s.readUint8()
+if size == 52:
+    s.skip(1)
+else:
+    s.skip(3)
+data.gold = s.readUint32()
+result.data = data
+
+case autocalc: bool
+of true:
+12 byte version
+of false:
+52 byte version
+
+
+PGRD only one pgrc tag, with an array of uint32
+of PGRC:
+checkTag(s.readTag(),PGRC)
+let size = int(s.readUint32()) / 4
+for x in 0..<int(size):
+    result.connection_list.add(s.readUint32())
+
+add DELE to PGRD
+
+REGN different # of variables dependent on size
+of WEAT:
+checkTag(s.readTag(),WEAT)
+var chances = WeatherChances()
+let size = s.readUint32()
+chances.clear = s.readUint8()
+chances.cloudy = s.readUint8()
+chances.foggy = s.readUint8()
+chances.overcast = s.readUint8()
+chances.rain = s.readUint8()
+chances.thunder = s.readUint8()
+chances.ash = s.readUint8()
+chances.blight = s.readUint8()
+if size == 10:
+    chances.snow = s.readUint8().some {.ifSize(10).}
+    chances.blizzard = s.readUint8().some {.ifSize(10).}
+result.weather_chances = WeatherChances()
+
+
+SCPT requires custom 
+wonder if we could instead just readSize and then read that into a string variable
+and then parse that if and when we need it
+of SCVR:
+checkTag(s.readTag(),SCVR)
+let size = s.readUint32()
+var varlist = s.readStr(size.int).split(NULLRUNE)
+let num_shorts = result.script_header.num_shorts
+let num_longs = result.script_header.num_longs
+let num_floats = result.script_header.num_floats
+var shorts: seq[string] = @[]
+var longs: seq[string]  = @[]
+var floats: seq[string]  = @[]
+for s in 0..num_shorts:
+    shorts.add(varlist[s])
+for l in 0..num_longs:
+    longs.add(varlist[l+num_shorts])
+for f in 0..num_floats:
+    floats.add(varlist[f+num_shorts+num_longs])
+
+result.script_variables = ScriptVariables(shorts: shorts,longs: longs,floats: floats).some
+

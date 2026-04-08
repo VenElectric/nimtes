@@ -1,0 +1,7 @@
+Object placement (i.e. creeper moved to balmora or lockbox removed from Arrille's tradehouse)
+Landscape (i.e. flat area could become mountain or dwemer ruin)
+Interior design 
+File path / file names (dagoth_ur.nif -> dagoth_fur.nif)
+names of things? (not sure how to detect that the name has changed, maybe internal id?)
+Additions
+Subtractions
