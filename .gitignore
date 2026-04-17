@@ -1,8 +1,3 @@
-/BIR.esp
-/BIR.json
-/BIR_MASHED.esp
-/BIR_MASHED.json
-/Morrowind.esm
 /Morrowind.json
 /nimtes.exe
 /tes3conv.exe
@@ -13,17 +8,8 @@ nimble.develop
 nimble.paths
 nimbledeps
 /Morrowind
-/Morrowind Rebirth-37795-7-1-1769455455
-/Barabus Fireplaces 2 - Vanilla Chimneys v2.2-45766-2-2-1540379427
 /files
-Anvil Faction Skiff-58450-0-2-1773704813.zip
-Companion Leveler-51760-3-3-1-1760900257.zip
-anvilfactionskiff.ESP
 Morrowind.ini
 .gitignore
-The Ashlanders PL-50712-1-0-1643488020.rar
-The Tribe Unmourned.esp
-Graphic Herbalism MWSE - OpenMW-46599-1-04-1558643353
-.DS_Store
 conflicts.txt
 .DS_Store

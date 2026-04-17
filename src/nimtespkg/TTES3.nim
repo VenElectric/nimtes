@@ -1,5 +1,5 @@
 import std/[paths, files]
-import record, util, tescfg,conflicts
+import record, util, reader
 
 type
     HeaderData* = ref object of DataField
@@ -30,18 +30,11 @@ func author*(r): string = r.HEDR.author
 func file_desc*(r): string = r.HEDR.fileDesc
 func num_records*(r): uint32 = r.HEDR.numRecords
 
+proc readHeader*(s:Stream,r:TES3): TES3 =
+    setPosition(s,0)
+    result = readRecord(s,TES3)
 
 
-proc verify_masters*(r; c: TES3Cfg): seq[string] =
-    result = @[]
-    let mf = master_files(r)
-    if len(mf) > 0:
-        for m in mf:
-            let filePath = Path(path(c)) / DATA_FILES / Path(file_name(
-                    m))
-            echo filePath
-            if not fileExists(filePath): # return list of master ifles t
-                result.add(file_name(m))
 
 proc `$`*(r): string =
     result = "TES3"

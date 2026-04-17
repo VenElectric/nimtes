@@ -1,5 +1,5 @@
 import std/[streams, macros, options, algorithm, strformat,tables]
-import util, record, logg,TPGRD,TREGN
+import util, record, logg,TPGRD
 using
     s: Stream
 
@@ -99,6 +99,21 @@ proc get_record_offsets*(s): TagFields =
         result.add tag
         skip(s,tag.size+8)
 
+proc getRecordOffsetsOfType*(s;tag:string): TagFields =
+    result = TagFields()
+    setPosition(s,0)
+    while not atEnd(s):
+        if peekTag(s) == tag:
+            let tag = createTag(s)
+            result.add tag
+            skip(s,tag.size+8)
+        else:
+            consumeTag(s)
+            let size = readSize(s)
+            skip(s,size+8)
+
+
+
 proc checkSize*(actual: uint32; tags: TagFields) =
     var calc: uint32 = 0
     for i in 1..len(tags.tags)-1:
@@ -129,7 +144,6 @@ proc readField(s; dst: var seq[AI_Package]; tags: var TagFields)
 proc readField(s; dst: var ActivatePkg; tags: var TagFields)
 proc readfield(s; dst: var FollowerData; tags: var TagFields)
 proc readField(s;dst: var NPCData;tags: var Tagfields)
-proc readField(s;dst: var WeatherChances;tags: var TagFields)
 proc readField(s;dst: var ScriptData;tags: var TagFields)
 
 proc readField*(s; dst: var char; tags: var TagFields) =
@@ -348,21 +362,6 @@ proc readField*[T](s; dst: var seq[T]; tags: var TagFields) =
     readField(s, temp, tags)
     dst.add temp
 
-proc readField(s;dst: var WeatherChances;tags: var TagFields) =
-    let size = peek(tags).size
-    read(s,dst.clear)
-    read(s,dst.cloudy)
-    read(s,dst.foggy)
-    read(s,dst.overcast)
-    read(s,dst.rain)
-    read(s,dst.thunder)
-    read(s,dst.ash)
-    read(s,dst.blight)
-    if size == 10:
-        read(s,dst.snow)
-        read(s,dst.blizzard)
-    next(tags)
-
 
 
 proc readField[T: object](s; dst: var T; tags: var Tagfields) =
@@ -371,34 +370,6 @@ proc readField[T: object](s; dst: var T; tags: var Tagfields) =
     while not atEnd(tags):
         setPosition(s, peek(tags).pos)
         readObjectImpl(s, dst, tags)
-
-proc readPGRD(s;dst: var PGRD,tags: var TagFields) = 
-    assert(peek(tags).name == "DATA","DATA field not found for PGRD")
-    setPosition(s,peek(tags).pos)
-    read(s,dst.DATA)
-    next(tags)
-    assert(peek(tags).name == "NAME","Missing Name field for PGRD")
-    setPosition(s,peek(tags).pos)
-    readField(s,dst.NAME,tags)
-    let pathCount = dst.DATA.path_pt_count
-    var pathTotal = 0
-    if peek(tags).name == "PGRP":
-        setPosition(s,peek(tags).pos)
-        for _ in countup(1,int(pathCount)):
-            var temp = PathPoint()
-            read(s,temp.x)
-            read(s,temp.y)
-            read(s,temp.z)
-            read(s,temp.flags)
-            read(s,temp.conn_count)
-            inc(pathTotal,temp.conn_count)
-            skip(s,2) # junk data
-            dst.PGRP.add temp
-        next(tags)
-    if peek(tags).name == "PGRC":
-        setPosition(s,peek(tags).pos)
-        for _ in countup(1,pathTotal):
-            dst.PGRC.add readUint32(s)
 
         
 
@@ -417,10 +388,8 @@ proc readRecord*[T: TES3Record](s; dst: typedesc[T]): T =
     checkSize(result.size, tags)
     skip(s, 4)
     result.flags = readUint32(s)
-    when T is PGRD:
-        readPGRD(s,result,tags)
-    else:
-        readField(s, result[], tags)
+    
+    readField(s, result[], tags)
 
 proc readAllRecordofType*[T:TES3Record](s;dst:typedesc[T],key:string): seq[T] =
     setPosition(s,0)
@@ -437,4 +406,4 @@ proc readAllRecordofType*[T:TES3Record](s;dst:typedesc[T],key:string): seq[T] =
             let size = readSize(s)
             skip(s,size+8)
 
-
+export read,getPosition,setPosition,Stream,readUint32,atEnd,readStr

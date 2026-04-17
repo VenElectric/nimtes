@@ -1,6 +1,6 @@
 import std/options
-import record,util
-
+import record,util,reader
+from std/streams import read,Stream
 type
     WeatherChances* = object
         clear*:uint8
@@ -26,6 +26,26 @@ type
 
 using
     r:REGN
+    s:Stream
+
+proc readField*(s;dst: var WeatherChances;tags: var TagFields) =
+    let size = peek(tags).size
+    read(s,dst.clear)
+    read(s,dst.cloudy)
+    read(s,dst.foggy)
+    read(s,dst.overcast)
+    read(s,dst.rain)
+    read(s,dst.thunder)
+    read(s,dst.ash)
+    read(s,dst.blight)
+    if size == 10:
+        read(s,dst.snow)
+        read(s,dst.blizzard)
+    next(tags)
+
+proc readRegion*(s): REGN = readRecord(s,REGN)
+
+proc readAllRegion*(s): seq[REGN] = readAllRecordofType(s,REGN,"REGN")
 
 proc `$`*(r): string =
     result = "REGN"

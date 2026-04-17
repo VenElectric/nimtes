@@ -1,4 +1,13 @@
-import std/[unicode,options]
+import std/[unicode,options,paths]
+
+type
+    CheckKind* = enum 
+        CHMesh,
+        CHMusic,
+        CHTexture,
+        CHFont,
+        CHIcon,
+        CHSound
 
 const NULLRUNE* = toRunes("\u0000")
 
@@ -8,11 +17,13 @@ proc has_flag*(flags,value: uint32): bool = result = (value and (not flags)) == 
 
 proc stripNull*(s:string):string = strip(s,true,true,NULLRUNE)
 
-func unwrap_str*(s:Option[string]): string = 
-    result = stripNull(get(s,""))
+proc bothSome*[T](l,r:Option[T]): bool = isSome(l) and isSome(r)
+
+converter toPath*(v:string): Path = Path(v)
 
 template zsize*(sz:int) {.pragma.}
-template data_tag*(d:string) {.pragma.}
+template dtag*(d:string) {.pragma.}
+template check*(c:CheckKind) {.pragma.}
 
 
 

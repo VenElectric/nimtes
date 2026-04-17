@@ -1,5 +1,5 @@
 import std/[options, sugar, colors]
-import record, util
+import record, util,conflicts,reader,tescfg
 
 type
     CellFlags* = enum 
@@ -44,15 +44,15 @@ type
         NAM0*: uint32
         FRMR*: TagList[FormRef]
     CELL* = ref object of TES3Record
-        NAME{.data_tag("ID").}: string
-        DATA{.data_tag("Cell Data").}: CellData
-        RGNN{.data_tag("Region Name").}: Option[string]
-        NAM5{.data_tag("Map Color").}: Option[RGBA]
-        WHGT{.data_tag("Moved References").}: Option[float32]
-        INTV{.data_tag("Moved References").}: Option[int32]
-        AMBI{.data_tag("Moved References").}: Option[AmbientLight]
-        MVRF{.data_tag("Moved References").}: TagList[MovedRef]
-        FRMR{.data_tag("Persistent Children").}: TagList[FormRef]
+        NAME{.dtag("ID").}: string
+        DATA{.dtag("Cell Data").}: CellData
+        RGNN{.dtag("Region Name").}: Option[string]
+        NAM5{.dtag("Map Color").}: Option[RGBA]
+        WHGT{.dtag("Moved References").}: Option[float32]
+        INTV{.dtag("Moved References").}: Option[int32]
+        AMBI{.dtag("Moved References").}: Option[AmbientLight]
+        MVRF{.dtag("Moved References").}: TagList[MovedRef]
+        FRMR{.dtag("Persistent Children").}: TagList[FormRef]
         NAM0: Option[TemporaryChildren]
 # 0x01 = Interior
 
@@ -196,7 +196,6 @@ proc find_persist_reference*(r; id: uint32): Option[FormRef] =
         if len(results) > 0:
             result = some(results[0])
 
-
 #NAME value
 proc find_temp_child*(r; id: string): Option[FormRef] = 
     if temp_children_count(r) > 0:
@@ -217,14 +216,13 @@ proc find_temp_child*(r; id: uint32): Option[FormRef] =
         if len(results) > 0:
             result = some(results[0])
 
-#NAME
-#ANAM
-#XSOL
-#KNAM
-#TNAM
-# not sure if this would be useful....
-# proc find_ref*(r;id: string): Option[FormRef] = 
-#     discard
+proc check*(l,r:MovedRef,what:string,msgs:var seq[string]) = discard
+
+proc check*(l,r:FormRef,what:string,msgs:var seq[string]) = discard
+
+proc checkConflict*(c:TES3Cfg,main,toCmp:CELL):seq[string] =
+    if cell_name(main) != cell_name(toCmp):
+        return
 
 proc `$`*(r: CELL): string =
     result = "CELL"

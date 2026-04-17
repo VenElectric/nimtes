@@ -1,33 +1,57 @@
 import std/options
-import record, util,conflicts
+import record, util,conflicts,reader,tescfg
 type
     ACTI* = ref object of TES3Record
-        NAME: string
-        MODL: Option[string]
-        FNAM: Option[string]
-        SCRI: Option[string]
+        NAME {.dtag("ID").}: string
+        MODL {.dtag("Model Name").}: Option[string]
+        FNAM {.dtag("Name").}: Option[string]
+        SCRI {.dtag("Script Name").}: Option[string]
 
+const ACTITAG = "ACTI"
 
 using
     r: ACTI
+    s: Stream
 
 func id*(r): string = stripNull(r.NAME)
-func model_path*(r): string = unwrap_str(r.MODL)
-func name*(r): string = unwrap_str(r.FNAM)
-func script_name*(r): string = unwrap_str(r.SCRI)
+func model_path*(r):Option[string] = r.MODL
+func name*(r): Option[string] = r.FNAM
+func script_name*(r): Option[string] = r.SCRI
 
-proc conflict*(r1,r2:ACTI): seq[string] = 
-    if model_path(r1) != model_path(r2):
-        result.add create_message("Model path",model_path(r1),model_path(r2))
-    if script_name(r1) != script_name(r2):
-        result.add create_message("Script name",script_name(r1),script_name(r2))
+proc readActivator*(s): ACTI = readRecord(s,ACTI)
 
-# compare
-# S1 and S2
-# get all ACTI for S1 and S2
-# loop through S1_ACTI
-# get id, and then search for that ID in ACTI 2
-# probably just compare that model paths are the same
+proc readAllActivator*(s): seq[ACTI] = readAllRecordofType(s,ACTI,ACTITAG)
+
+
+
+proc checkConflict*(c:TES3Cfg,main:ACTI,toCmp:ACTI):seq[string] = 
+    if id(main) != id(toCmp):
+        return
+    result = check(main,toCmp)
+
+    if isSome(model_path(toCmp)):
+        let path = createMeshPath(path(c),get(toCmp))
+        if not checkPath(path):
+            result.add "Invalid mesh path: " & $path
+
+
+proc checkActi*(c:TES3Cfg,main,other:Stream):seq[RecordConflicts] = 
+    result = @[]
+    var mainTags = getRecordOffsetsOfType(s,ACTITAG)
+    var otherTags = getRecordOffsetsOfType(s,ACTITAG)
+
+    for r in items(mainTags):
+        setPosition(main,r.pos - 8)
+        let mRec = readActivator(main)
+        for o in items(otherTags):
+            setPosition(other,o.pos - 8)
+            let oRec = readActivator(other)
+            if id(mRec) == id(oRec):
+                let msgs = checkConflict(mRec,oRec)
+                if len(msgs) > 0:
+                    result.add newConflict(id,msgs)
+                break
+
 
 
 proc `$`*(r): string =

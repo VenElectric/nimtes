@@ -1,5 +1,5 @@
 import std/options
-import record,util
+import record,util,reader,conflicts
 
 type 
     AlchemyData* = ref object of DataField
@@ -17,6 +17,7 @@ type
 
 using 
     r: ALCH
+    s:Stream
 
 proc auto_calc*(r): bool = 
     result = false
@@ -37,6 +38,10 @@ func icon_path*(r): Option[string] = r.TEXT
 func script_name*(r): string = unwrap_str(r.SCRI)
 func name*(r): string = unwrap_str(r.FNAM)
 func enchants*(r): seq[EnchantmentData] = r.ENAM
+
+proc readAlchemy*(s): ALCH = readRecord(s,ALCH)
+
+proc readAllAlchemy*(s): seq[ALCH] = readAllRecordofType(s,ALCH,"ALCH")
 
 proc `$`*(r): string =
     result = "ALCH"

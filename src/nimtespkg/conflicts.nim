@@ -1,7 +1,10 @@
-import std/[tables,strformat,strutils,sequtils,paths,files,dirs]
-import util,tescfg
+import std/[tables,strformat,paths,files,dirs,options]
+import util,tescfg,record
+from macros import getCustomPragmaVal,hasCustomPragma
+from strutils import replace,endsWith,indent
 
 type
+
     RecordConflicts* = object
         id: string
         messages: seq[string]
@@ -30,11 +33,11 @@ const SPLASH* = Path("Splash")
 const TEXTURES* = Path("Textures")
 const VIDEOS* = Path("Video")
 
-func new_result*(plugin:string,records: seq[string],checked_plugins:seq[string]): CompareResult =
+func new_result*(plugin:string): CompareResult =
     result.masters = @[]
     result.plugin = plugin
-    result.records = records
-    result.checked_plugins = checked_plugins
+
+func newPluginData*(): PluginData = initTable[string,seq[RecordConflicts]]()
 
 proc add_master*(cv:var CompareResult,master:string) =
     cv.masters.add master
@@ -54,7 +57,7 @@ proc add*(pd:var PluginData,key:string,rc:RecordConflicts) =
 
 func len*(rc:RecordConflicts): int = len(rc.messages)
 
-func new_conflict*(id:string,messages:seq[string]): RecordConflicts =
+func newConflict*(id:string,messages:seq[string]): RecordConflicts =
     result.id = id
     result.messages = messages
 
@@ -69,7 +72,7 @@ func create_message*(what,initial,change:string): string =
 proc add*(rc:var RecordConflicts,message:string) =
     rc.messages.add message
 
-proc get_plugin_files*(c:TES3Cfg): seq[string] = 
+proc getPluginFiles*(c:TES3Cfg): seq[string] = 
     let pluginPath = path(c) / DATA_FILES
     for k,p in walkDir(pluginPath):
         if k == pcFile:
@@ -77,7 +80,7 @@ proc get_plugin_files*(c:TES3Cfg): seq[string] =
             if endsWith(plugin,".esp"):
                 result.add plugin
 
-proc get_master_files*(c:TES3Cfg): seq[string] =
+proc getMasterFiles*(c:TES3Cfg): seq[string] =
     let pluginPath = path(c) / DATA_FILES
     for k,p in walkDir(pluginPath):
         if k == pcFile:
@@ -85,35 +88,80 @@ proc get_master_files*(c:TES3Cfg): seq[string] =
             if endsWith(plugin,".esm"):
                 result.add plugin
 
-proc check_mesh_path*(c:TES3Cfg,file:string): bool =
-    let p = path(c) / DATA_FILES / MESHES / Path(replace(file,'\\','/'))
-    echo p
-    result = fileExists(p)
+# proc verifyMasters*(r:TES3; c: TES3Cfg): seq[string] =
+#     result = @[]
+#     let mf = master_files(r)
+#     if len(mf) > 0:
+#         for m in mf:
+#             let filePath = Path(path(c)) / DATA_FILES / Path(file_name(m))
+#             if not fileExists(filePath): # return list of master ifles t
+#                 result.add(file_name(m))
 
-proc check_music_path*(c:TES3Cfg,file:string): bool =
-    let p = path(c) / DATA_FILES / MUSIC / Path(replace(file,'\\','/'))
-    result = fileExists(p)
 
-proc check_texture_path*(c:TES3Cfg,file:string): bool =
-    let p = path(c) / DATA_FILES / TEXTURES / Path(replace(file,'\\','/'))
-    result = fileExists(p)
 
-proc check_font_path*(c:TES3Cfg,file:string): bool =
-    let p = path(c) / DATA_FILES / FONTS / Path(replace(file,'\\','/'))
-    result = fileExists(p)
+proc createMeshPath*(tesPath:Path,file:string): Path = tesPath / DATA_FILES / MESHES / Path(replace(file,'\\','/'))
+proc createMusicPath*(tesPath:Path,file:string): Path = tesPath / DATA_FILES / MESHES / Path(replace(file,'\\','/'))
+proc createTexturePath*(tesPath:Path,file:string): Path = tesPath / DATA_FILES / MESHES / Path(replace(file,'\\','/'))
+proc createFontPath*(tesPath:Path,file:string): Path = tesPath / DATA_FILES / MESHES / Path(replace(file,'\\','/'))
+proc createIconPath*(tesPath:Path,file:string): Path = tesPath / DATA_FILES / MESHES / Path(replace(file,'\\','/'))
+proc createSoundPath*(tesPath:Path,file:string): Path = tesPath / DATA_FILES / MESHES / Path(replace(file,'\\','/'))
 
-proc check_icon_path*(c:TES3Cfg,file:string): bool =
-    let p = path(c) / DATA_FILES / ICONS / Path(replace(file,'\\','/'))
-    result = fileExists(p)
+proc checkPath*(p:Path): bool = fileExists(p)
 
-proc check_sound_path*(c:TES3Cfg,file:string): bool =
-    let p = path(c) / DATA_FILES / SOUNDS / Path(replace(file,'\\','/'))
-    result = fileExists(p)
+proc check*[T:SomeFloat|SomeInteger|string|bool](l,r:Option[T],what:string,msgs:var seq[string])
+proc check*[T:object](l,r:Option[T],what:string,msgs:var seq[string])
+
+
+proc check*(l,r:SomeInteger,what:string,msgs:var seq[string]) = 
+    if l != r:
+        msgs.add create_message(what,$l,$r)
+proc check*(l,r:SomeFloat,what:string,msgs:var seq[string]) = 
+    if l != r:
+        msgs.add create_message(what,$l,$r)
+proc check*(l,r,what:string,msgs:var seq[string]) = 
+    if l != r:
+        msgs.add create_message(what,l,r)
+
+# what, from, to
+#(string,string,string)
+proc check*[T:object](l,r:T,what:string,msgs:var seq[string]) = 
+    for lkey,lvalue in fieldPairs(l):
+        for rkey,rvalue in fieldPairs(r):
+            if lkey == rkey:
+                check(lvalue,rvalue,what & "." & lkey,msgs)
+                break
+
+
+proc check*[T:SomeFloat|SomeInteger|string|bool](l,r:Option[T],what:string,msgs:var seq[string]) =
+    if l != r:
+        if isSome(l) and isNone(r):
+            msgs.add create_message(what,get(l),"None")
+        elif isNone(l) and isSome(r):
+            msgs.add create_message(what,"None",get(r))
+        elif isSome(l) and isSome(r):
+            msgs.add create_message(what,get(l),get(r))
+
+# update
+proc check*[T:object](l,r:Option[T],what:string,msgs:var seq[string]) =
+    if l != r:
+        if isSome(l) and isNone(r):
+            msgs.add create_message(what,get(l),"None")
+        elif isNone(l) and isSome(r):
+            msgs.add create_message(what,"None",get(r))
+        elif isSome(l) and isSome(r):
+            check(get(l),get(r),what,msgs)
+
+proc check*[T:TES3Record](one,two:TES3Record):seq[string] =
+    result = @[]
+    for okey,ovalue in fieldPairs(one):
+        for tkey,tvalue in fieldPairs(two):
+            if okey == tkey:
+                check(ovalue,tvalue,getCustomPragmaVal(ovalue,dtag),result)
+                break
+
 
 proc `$`*(cd:RecordConflicts): string = 
     result = fmt"__{cd.id}__" & "\n"
-    # if cd.is_conflict:
-    #     result.add indent("CONFLICT",INDENTAMT) & "\n"
     for msg in cd.messages:
         result.add indent("- " & msg,INDENTAMT) & "\n"
 proc `$`*(pd:PluginData): string = 
@@ -136,103 +184,6 @@ proc `$`*(cr:CompareResult): string =
     for _,c in pairs(cr.conflicts):
         result.add $c
 
-# Table[string,CompareData]
-#       PLUGINNAME   , plugin name/id or name/message
-# TOP LEVEL ALCH PLUGIN1
-    # ids in plugin 1
-    # ids in plugin 2
-    # MODL
-        # 
-
-
-
-# Check one file
-#   Check to ensure masters match and exist
-#   Check to ensure
-
-# missing master files
-# collision 
-#   pathgrid
-#   landsacpe/interior
-
-# TO DO
-# esp file comparison
-# data files comparison
-
-# compare exterior/interior cell names. based on?
-# maybe bring in master file that the esp file references and check that
-# get a sense of file path structure, and confirm what other mods do with that?
-
-# want to plot out how to compare things.
-# i.e. we may also need a "base" i.e. master file to understand what things were originally
-# and then we can say:
-# dagoth gilvoth's nif path was:
-# r\ashvampire03.nif 
-# in Divine Dagoth's it is r\ashvampire03.nif  (which matches the master file)
-# but was changed to:
-# VD\ashvampire03.nif
-# in The Tribe Unmourned
-# the issue comes in when something was not in the master file?
-# i.e. a new addition
-# ABC.esp has creature X at
-# VE\creax.nif
-# but plugin XYZ 
-# VC\creax.nif
-# might want to use the ids to compare. i.e. DD.dagoth gilvoth.MODL ==  TTU.dagoth gilvoth.MODL
-# instead of just relying on the file paths themselves
-# but then also need a way to verify the file paths in pluginless plugins
-# i.e. If Divine Dagoth didn't have ESP files, then need to compare those
-# this is probably where we would rely on the master file I think...?
-
-# what changed
-# how it changed (deleted, updated)
-# before and after (might just need to store this as str )
-# where it changed?
-# CELL
-#   CELL NAME: Arrille Tradehouse
-#       Persistent Child: Dagoth Ur
-#       Before: None
-#       After: Dagoth Ur
-#       Kind: Addition
-
-# markdown file
-# ***CONFLICTS*** 
-#   i.e. what has changed,how it changed
-#   CELL -> item not in interior
-#   CELL -> person removed
-#   PGRD -> pathgrid altered
-#   LAND -> vertices are different/conflict
-#   CREA -> path for nif file is different (v/nif -> VD/nif)
-#   WEAP -> weapon health altered from 10 -> 15
-
-# get baseline of file paths in morrowind datafiles
-# Morrowind.ini
-# DataFiles
-    # Textures
-    # Splash
-    # Music
-    # Meshes
-    # Fonts
-# which base game (i.e. core and dlc) masters are in DataFiles
-# Morrowind.esm/bsa
-# Bloodmoon.esm/bsa
-# Tribunal.esm/bsa
-
-# for mod master (i.e. Tamriel Rebuilt)
-# ??? not sure
-
-# for plugin:
-# two types of checks:
-    # plugin validation
-        # check masters (i.e. are masters listed in morrowind file directory?)
-        # get sense of records (i.e list of CELL,ACTI,ETC...)
-        # for each record, validate paths, validate item name 
-    # conflict validation
-        # check to see if other plugins change certain paths
-        # check interior/exterior to confirm if anything is moved,added
-        # check coordinate data. is anything overlapping? 
-        # pathgrids etc..
-        # etc... (each record will have different checks)
 
 
 
