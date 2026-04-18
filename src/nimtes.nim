@@ -7,4 +7,5 @@ when isMainModule:
 
    var x = MyObject()
    echo $MyObject
+   echo "hello world"
    
