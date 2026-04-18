@@ -1,9 +1,10 @@
-import nimtespkg/TPGRD
-import std/streams
+
+
 
 when isMainModule:
-    var s = openFileStream("files/Morrowind.esm")
+   type 
+      MyObject = object
 
-    var regns = readAllPGRD(s)
-
-    echo $regns[0]
+   var x = MyObject()
+   echo $MyObject
+   

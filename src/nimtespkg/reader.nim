@@ -1,5 +1,6 @@
-import std/[streams, macros, options, algorithm, strformat,tables]
-import util, record, logg,TPGRD
+import std/[streams, macros, options, strformat,tables]
+import util
+import testypes
 using
     s: Stream
 
@@ -35,7 +36,7 @@ proc consumeTag*(s) = discard readTag(s)
 
 func peek*(t: TagFields): TagPos = t.current
 
-proc create_tag(s): TagPos =
+proc createTag(s): TagPos =
     result.name = readTag(s)
     result.size = readSize(s)
     result.pos = getPosition(s)
@@ -55,22 +56,15 @@ proc filter*(tf:TagFields,p:FilterFunc): TagFields =
             result.add t
 
 proc next*(t: var TagFields) =
-    
     if t.cursor > len(t.tags)-1:
-
         t.atEnd = true;
         return
     inc(t.cursor)
 
-
     t.prev = t.current
-    
     t.current = t.tags[t.cursor-1]
-    # debug("Prev: " & t.prev.name)
-    # debug("Current: " & t.current.name)
-    # info("tag end")
 
-proc get_sub_level_offsets*(s): TagFields =
+proc getSubLevelOffsets*(s): TagFields =
     result = TagFields()
     result.tags = @[]
     var p = TagPos(name: readTag(s), size: readSize(s))
@@ -80,18 +74,18 @@ proc get_sub_level_offsets*(s): TagFields =
     let eot = getPosition(s) + int(p.size)
     while getPosition(s) < eot:
 
-        let tag = create_tag(s)
+        let tag = createTag(s)
         result.add tag
         skip(s, tag.size)
 
-proc get_record_counts*(s): CountTable[string] = 
+proc getRecordCounts*(s): CountTable[string] = 
     while not atEnd(s):
         let tag = readTag(s)
         let size = readSize(s)
         result.inc tag
         skip(s,size + 8)
 
-proc get_record_offsets*(s): TagFields = 
+proc getRecordOffsets*(s): TagFields = 
     result = TagFields()
     setPosition(s,0)
     while not atEnd(s):
@@ -121,23 +115,23 @@ proc checkSize*(actual: uint32; tags: TagFields) =
         calc = calc + tag.size + 8
     assert(actual == calc, fmt"Actual: {actual}, calc {calc}")
 
-proc readField*(s; dst: var char; tags: var TagFields)
-proc readField*(s; dst: var int8; tags: var TagFields)
-proc readField*(s; dst: var int16; tags: var TagFields)
-proc readField*(s; dst: var int32; tags: var TagFields)
-proc readField*(s; dst: var int64; tags: var TagFields)
-proc readField*(s; dst: var uint8; tags: var TagFields)
-proc readField*(s; dst: var uint16; tags: var TagFields)
-proc readField*(s; dst: var uint32; tags: var TagFields)
-proc readField*(s; dst: var uint64; tags: var TagFields)
-proc readField*(s; dst: var float32; tags: var TagFields)
-proc readField*(s; dst: var float64; tags: var TagFields)
-proc readField*(s; dst: var string; tags: var TagFields)
-proc readField*[T](s; dst: var Option[T]; tags: var TagFields)
-proc readField*[S, T](s; dst: var array[S, T];
+proc readField(s; dst: var char; tags: var TagFields)
+proc readField(s; dst: var int8; tags: var TagFields)
+proc readField(s; dst: var int16; tags: var TagFields)
+proc readField(s; dst: var int32; tags: var TagFields)
+proc readField(s; dst: var int64; tags: var TagFields)
+proc readField(s; dst: var uint8; tags: var TagFields)
+proc readField(s; dst: var uint16; tags: var TagFields)
+proc readField(s; dst: var uint32; tags: var TagFields)
+proc readField(s; dst: var uint64; tags: var TagFields)
+proc readField(s; dst: var float32; tags: var TagFields)
+proc readField(s; dst: var float64; tags: var TagFields)
+proc readField(s; dst: var string; tags: var TagFields)
+proc readField[T](s; dst: var Option[T]; tags: var TagFields)
+proc readField[S, T](s; dst: var array[S, T];
         tags: var TagFields)
-proc readField*[T](s; dst: var seq[T]; tags: var TagFields)
-proc readField*[T: object](s; dst: var T; tags: var TagFields)
+proc readField[T](s; dst: var seq[T]; tags: var TagFields)
+proc readField[T: object](s; dst: var T; tags: var TagFields)
 proc readField[T: DataField](s; dst: var T; tags: var TagFields)
 proc readField[T](s; dst: var TagList[T]; tags: var TagFields)
 proc readField(s; dst: var seq[AI_Package]; tags: var TagFields)
@@ -146,43 +140,43 @@ proc readfield(s; dst: var FollowerData; tags: var TagFields)
 proc readField(s;dst: var NPCData;tags: var Tagfields)
 proc readField(s;dst: var ScriptData;tags: var TagFields)
 
-proc readField*(s; dst: var char; tags: var TagFields) =
+proc readField(s; dst: var char; tags: var TagFields) =
     dst = s.readChar()
     next(tags)
-proc readField*(s; dst: var int8; tags: var TagFields) =
+proc readField(s; dst: var int8; tags: var TagFields) =
     dst = s.readInt8()
     next(tags)
-proc readField*(s; dst: var int16; tags: var TagFields) =
+proc readField(s; dst: var int16; tags: var TagFields) =
     dst = s.readInt16()
     next(tags)
-proc readField*(s; dst: var int32; tags: var TagFields) =
+proc readField(s; dst: var int32; tags: var TagFields) =
     dst = s.readInt32()
     next(tags)
-proc readField*(s; dst: var int64; tags: var TagFields) =
+proc readField(s; dst: var int64; tags: var TagFields) =
     dst = s.readInt64()
     next(tags)
-proc readField*(s; dst: var uint8; tags: var TagFields) =
+proc readField(s; dst: var uint8; tags: var TagFields) =
     dst = s.readUint8()
     next(tags)
-proc readField*(s; dst: var uint16; tags: var TagFields) =
+proc readField(s; dst: var uint16; tags: var TagFields) =
     dst = s.readUint16()
     next(tags)
-proc readField*(s; dst: var uint32; tags: var TagFields) =
+proc readField(s; dst: var uint32; tags: var TagFields) =
     dst = s.readUint32()
     next(tags)
-proc readField*(s; dst: var uint64; tags: var TagFields) =
+proc readField(s; dst: var uint64; tags: var TagFields) =
     dst = s.readUint64()
     next(tags)
-proc readField*(s; dst: var float32; tags: var TagFields) =
+proc readField(s; dst: var float32; tags: var TagFields) =
     dst = s.readFloat32()
     next(tags)
-proc readField*(s; dst: var float64; tags: var TagFields) =
+proc readField(s; dst: var float64; tags: var TagFields) =
     dst = s.readFloat64()
     next(tags)
-proc readField*(s; dst: var string; tags: var TagFields) =
+proc readField(s; dst: var string; tags: var TagFields) =
     dst = readStr(s, int(peek(tags).size))
     next(tags)
-proc readField*[T](s; dst: var Option[T]; tags: var TagFields) =
+proc readField[T](s; dst: var Option[T]; tags: var TagFields) =
     var temp: T
     when T is ref:
         temp = new(T)
@@ -192,10 +186,7 @@ proc readField*[T](s; dst: var Option[T]; tags: var TagFields) =
     readField(s, temp, tags)
     dst = some(temp)
 
-
-
-
-proc readField*[S, T](s; dst: var array[S, T];
+proc readField[S, T](s; dst: var array[S, T];
         tags: var TagFields) =
     read(s, dst)
     next(tags)
@@ -310,7 +301,6 @@ macro readObjectImpl[T: object](s; dst: var T; tags: var TagFields) =
         peek(`tags`).name
     for it in body:
         let fieldSym = it[0]
-        let typeSym = it[1]
         let fieldStr = strVal(fieldSym)
 
         var ofBranch = nnkOfBranch.newTree()
@@ -352,7 +342,7 @@ proc readField(s;dst: var ScriptData;tags: var TagFields) =
 
     next(tags)
 
-proc readField*[T](s; dst: var seq[T]; tags: var TagFields) =
+proc readField[T](s; dst: var seq[T]; tags: var TagFields) =
     var temp: T
     when T is ref:
         temp = new(T)
@@ -371,13 +361,40 @@ proc readField[T: object](s; dst: var T; tags: var Tagfields) =
         setPosition(s, peek(tags).pos)
         readObjectImpl(s, dst, tags)
 
-        
+proc readPGRD(s;dst: var PGRD;tags: var TagFields) = 
+
+    assert(peek(tags).name == "DATA","DATA field not found for PGRD")
+    setPosition(s,peek(tags).pos)
+    read(s,dst.DATA)
+    next(tags)
+    assert(peek(tags).name == "NAME","Missing Name field for PGRD")
+    setPosition(s,peek(tags).pos)
+    readField(s,dst.NAME,tags)
+    let pathCount = dst.DATA.path_pt_count
+    var pathTotal = 0
+    if peek(tags).name == "PGRP":
+        setPosition(s,peek(tags).pos)
+        for _ in countup(1,int(pathCount)):
+            var temp = PathPoint()
+            read(s,temp.x)
+            read(s,temp.y)
+            read(s,temp.z)
+            read(s,temp.flags)
+            read(s,temp.conn_count)
+            inc(pathTotal,temp.conn_count)
+            skip(s,2) # junk data
+            dst.PGRP.add temp
+        next(tags)
+    if peek(tags).name == "PGRC":
+        setPosition(s,peek(tags).pos)
+        for _ in countup(1,pathTotal):
+            dst.PGRC.add readUint32(s)   
 
 proc readRecord*[T: TES3Record](s; dst: typedesc[T]): T =
     result = new(T)
     let pos = getPosition(s)
 
-    var tags = get_sub_level_offsets(s)
+    var tags = getSubLevelOffsets(s)
 
     next(tags) 
     next(tags)
@@ -389,10 +406,16 @@ proc readRecord*[T: TES3Record](s; dst: typedesc[T]): T =
     skip(s, 4)
     result.flags = readUint32(s)
     
-    readField(s, result[], tags)
+    when T is PGRD:
+        readPGRD(s,result,tags)
+    else:
+        readField(s, result[], tags)
 
-proc readAllRecordofType*[T:TES3Record](s;dst:typedesc[T],key:string): seq[T] =
+proc readAllRecordofType*[T:TES3Record](s;dst:typedesc[T]): seq[T] =
     setPosition(s,0)
+    var key = $dst
+    if key == "NPC":
+        key = "NPC_"
     while not atEnd(s):
         let tag = peekTag(s)
         if tag == key:
@@ -405,5 +428,3 @@ proc readAllRecordofType*[T:TES3Record](s;dst:typedesc[T],key:string): seq[T] =
             consumeTag(s)
             let size = readSize(s)
             skip(s,size+8)
-
-export read,getPosition,setPosition,Stream,readUint32,atEnd,readStr

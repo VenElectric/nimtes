@@ -1,11 +1,3 @@
 
 os.execute("nimpretty src/nimtes.nim")
-os.execute("nimpretty src/nimtespkg/record.nim")
-os.execute("nimpretty src/nimtespkg/read.nim")
-os.execute("nimpretty src/nimtespkg/TACTI.nim")
-os.execute("nimpretty src/nimtespkg/TBOOK.nim")
-os.execute("nimpretty src/nimtespkg/TCELL.nim")
-os.execute("nimpretty src/nimtespkg/TCONT.nim")
-os.execute("nimpretty src/nimtespkg/TFACT.nim")
-os.execute("nimpretty src/nimtespkg/TTES3.nim")
-os.execute("nimpretty src/nimtespkg/TMGEF.NIM")
+os.execute("nimpretty src/nimtespkg/testypes.nim")

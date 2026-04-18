@@ -1,5 +1,5 @@
 import std/[tables,strformat,paths,files,dirs,options]
-import util,tescfg,record
+import util,tescfg,testypes
 from macros import getCustomPragmaVal,hasCustomPragma
 from strutils import replace,endsWith,indent
 
@@ -11,18 +11,12 @@ type
     PluginData* = Table[string,seq[RecordConflicts]] # TAG (i.e. CELL),Conflicts
     CompareResult* = object
         masters: seq[string]
-        records*: seq[string]
+        records*: CountTable[string]
         plugin*: string
         checked_plugins: seq[string]
         conflicts: Table[string,PluginData] # Plugin,Conflicts
 
-# make sure that plugins checked have record types of the base plugin
 
-
-# change naming conventions for each of these
-# CompareResult.conflicts leads to plugin data...which technically
-# idk about what I changed it too. meh
-# const BOOK_ART = Path("BookArt")
 const DATA_FILES* = Path("Data Files")
 const FONTS* = Path("Fonts")
 const ICONS* = Path("Icons")
@@ -33,19 +27,24 @@ const SPLASH* = Path("Splash")
 const TEXTURES* = Path("Textures")
 const VIDEOS* = Path("Video")
 
-func new_result*(plugin:string): CompareResult =
+func newResult*(plugin:string,records:CountTable[string]): CompareResult =
     result.masters = @[]
     result.plugin = plugin
+    result.records = records
 
 func newPluginData*(): PluginData = initTable[string,seq[RecordConflicts]]()
 
-proc add_master*(cv:var CompareResult,master:string) =
+func newConflict*(id:string,messages:seq[string]): RecordConflicts =
+    result.id = id
+    result.messages = messages
+
+proc addMaster*(cv:var CompareResult,master:string) =
     cv.masters.add master
 
-proc set_masters*(cv:var CompareResult,masters:seq[string]) = 
+proc setMasters*(cv:var CompareResult,masters:seq[string]) = 
     cv.masters = masters
 
-proc add_conflict*(cv: var CompareResult,key:string,pd:PluginData) =
+proc addConflict*(cv: var CompareResult,key:string,pd:PluginData) =
     cv.conflicts[key] = pd
 
 proc add*(pd:var PluginData,key:string,rc:RecordConflicts) = 
@@ -53,13 +52,10 @@ proc add*(pd:var PluginData,key:string,rc:RecordConflicts) =
         pd[key] = @[]
     add(pd[key],rc)
 
+proc setRecords*(c:sink CountTable[string]) = discard
 
 
 func len*(rc:RecordConflicts): int = len(rc.messages)
-
-func newConflict*(id:string,messages:seq[string]): RecordConflicts =
-    result.id = id
-    result.messages = messages
 
 # messages
 # X file does not exist
@@ -141,7 +137,6 @@ proc check*[T:SomeFloat|SomeInteger|string|bool](l,r:Option[T],what:string,msgs:
         elif isSome(l) and isSome(r):
             msgs.add create_message(what,get(l),get(r))
 
-# update
 proc check*[T:object](l,r:Option[T],what:string,msgs:var seq[string]) =
     if l != r:
         if isSome(l) and isNone(r):
@@ -151,7 +146,7 @@ proc check*[T:object](l,r:Option[T],what:string,msgs:var seq[string]) =
         elif isSome(l) and isSome(r):
             check(get(l),get(r),what,msgs)
 
-proc check*[T:TES3Record](one,two:TES3Record):seq[string] =
+proc check*[T:TES3Record](one,two:T):seq[string] =
     result = @[]
     for okey,ovalue in fieldPairs(one):
         for tkey,tvalue in fieldPairs(two):
