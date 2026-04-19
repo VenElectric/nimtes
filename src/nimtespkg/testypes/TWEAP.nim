@@ -46,7 +46,7 @@ using
     r:WEAP
 
 func id*(r): string = r.NAME
-func model_path*(r): string = r.MODL
+func modelPath*(r): string = r.MODL
 func name*(r): Option[string] = r.FNAM
 func data*(r): WeaponData = r.WPDT
 
@@ -60,20 +60,20 @@ func kind*(r): WeaponKind =
 func health*(r): uint16 = data(r).health
 func speed*(r): float32 = data(r).speed
 func reach*(r): float32 = data(r).reach
-func enchant_points*(r): uint16 = data(r).enchant_pts
+func enchantPoints*(r): uint16 = data(r).enchant_pts
 
-func atk_range(min,max:uint8): WeaponAtkRange = (min:min,max:max)
+func atkRange(min,max:uint8): WeaponAtkRange = (min:min,max:max)
 
-func attack_ranges*(r): tuple[chop:WeaponAtkRange,slash:WeaponAtkRange,thrust:WeaponAtkRange] =
+func attackRanges*(r): tuple[chop:WeaponAtkRange,slash:WeaponAtkRange,thrust:WeaponAtkRange] =
     let d = data(r)
-    (chop:atk_range(d.chop_min,d.chop_max),slash:atk_range(d.slash_min,d.slash_max),thrust:atk_range(d.thrust_min,d.thrust_max))
+    (chop:atkRange(d.chop_min,d.chop_max),slash:atkRange(d.slash_min,d.slash_max),thrust:atkRange(d.thrust_min,d.thrust_max))
 
-proc ignore_normal_resistance*(r): bool = has_flag(data(r).flags,0x1)
-proc silver_weapon*(r): bool = has_flag(data(r).flags,0x2)
+proc ignoreNormalResistance*(r): bool = hasFlag(data(r).flags,0x1)
+proc silverWeapon*(r): bool = hasFlag(data(r).flags,0x2)
 
 func icon_path*(r): Option[string] = r.ITEX
-func enchantment_id*(r): Option[string] = r.ENAM
-func script_id*(r): Option[string] = r.SCRI
+func enchantmentId*(r): Option[string] = r.ENAM
+func scriptId*(r): Option[string] = r.SCRI
 
 proc `$`*(r): string = 
     result = "WEAP"

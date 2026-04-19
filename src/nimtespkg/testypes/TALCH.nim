@@ -7,22 +7,22 @@ type
         value: uint32
         flags: uint32
     ALCH* = ref object of TES3Record
-        NAME: string
-        MODL: Option[string]
-        TEXT: Option[string]
-        SCRI: Option[string]
-        FNAM: Option[string]
-        ALDT: Option[AlchemyData]
-        ENAM: seq[EnchantmentData] 
+        NAME {.dtag("ID").}: string
+        MODL {.dtag("Model Path"),mesh.}: Option[string]
+        TEXT {.dtag("Icon Path"),icon.}: Option[string]
+        SCRI {.dtag("Script Name").}: Option[string]
+        FNAM {.dtag("Name").}: Option[string]
+        ALDT {.dtag("Alchemy Data").}: Option[AlchemyData]
+        ENAM {.dtag("Enchantments").}: seq[EnchantmentData] 
 
 using 
     r: ALCH
     s:Stream
 
-proc auto_calc*(r): bool = 
+proc autoCalc*(r): bool = 
     result = false
     if isSome(r.ALDT):
-        result = has_flag(get(r.ALDT).flags,AUTO_CALC)
+        result = hasFlag(get(r.ALDT).flags,AUTO_CALC)
 
 func weight*(r): Option[float32] = 
     if isSome(r.ALDT):
@@ -33,9 +33,9 @@ func value*(r): Option[uint32] =
         result = some(get(r.ALDT).value)
 
 func id*(r): string = stripNull(r.NAME)
-func model_path*(r): Option[string] = r.MODL
-func icon_path*(r): Option[string] = r.TEXT
-func script_name*(r): Option[string] = r.SCRI
+func modelPath*(r): Option[string] = r.MODL
+func iconPath*(r): Option[string] = r.TEXT
+func scriptName*(r): Option[string] = r.SCRI
 func name*(r): Option[string] = r.FNAM
 func enchants*(r): seq[EnchantmentData] = r.ENAM
 

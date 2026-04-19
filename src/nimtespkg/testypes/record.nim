@@ -333,7 +333,7 @@ type
         r*: uint8
         g*: uint8
         b*: uint8
-    RGBO* = object
+    RGBO* = object # only used for LAND...so that readField(array) will work properly. ref object takes up a smidge of space...and thus fucks over the read operation
         r*: uint8
         g*: uint8
         b*: uint8
@@ -442,64 +442,73 @@ type
         uses*:uint32
 
 
+proc hasFlag*(flags,value: uint32): bool = result = (value and (not flags)) == 0
 
+template zsize*(sz:int) {.pragma.}
+template dtag*(d:string) {.pragma.}
+template mesh*() {.pragma.}
+template music*() {.pragma.}
+template texture*() {.pragma.}
+template font*() {.pragma.}
+template icon*() {.pragma.}
+template sound*() {.pragma.}
+template skipField*() {.pragma.}
 
-func flagtup*[T:enum](c: int, f: T): FlagTuple[T] = (check: uint32(c), incl:f)
 # SpecializationKind
-proc spec_assert*(r: SomeUnsignedInt) = 
+proc specAssert*(r: SomeUnsignedInt) = 
     assert(r < 4,"Invalid Specialization number: " & $r)
 
-proc spec_assert*(r: SomeInteger) = 
+proc specAssert*(r: SomeInteger) = 
     assert(r < 4,"Invalid Specialization number: " & $r)
 
-proc attribute_assert*(r: SomeUnsignedInt) =
+proc attributeAssert*(r: SomeUnsignedInt) =
     assert(r < 8, "Invalid attribute index: " & $r)
 
-proc attribute_assert*(r: SomeInteger) =
+proc attributeAssert*(r: SomeInteger) =
     assert(r < 8 and r >= -1, "Invalid attribute index: " & $r)
 
-proc skill_assert*(r: SomeUnsignedInt) =
+proc skillAssert*(r: SomeUnsignedInt) =
     assert(r < 27, "Invalid skill index: " & $r)
 
-proc skill_assert*(r: SomeInteger) =
+proc skillAssert*(r: SomeInteger) =
     assert(r < 27 and r >= -1, "Invalid skill index: " & $r)
 
-proc effect_assert*(r: SomeInteger) =
+proc effectAssert*(r: SomeInteger) =
     assert(r < 143 and r >= -1, "Invalid effect index: " & $r)
 
-proc effect_assert*(r: SomeUnsignedInt) =
+proc effectAssert*(r: SomeUnsignedInt) =
     assert(r < 143, "Invalid effect index: " & $r)
 
-proc to_attributes*[R,T:SomeInteger|SomeUnsignedInt](r:array[R,T]): array[R,AttributeIndex] =
+proc toAttributes*[R,T:SomeInteger|SomeUnsignedInt](r:array[R,T]): array[R,AttributeIndex] =
     for idx,a in pairs(r):
-        attribute_assert(a)
+        attributeAssert(a)
         result[idx] = AttributeIndex(a)
 
-proc to_skills*[R,T:SomeInteger|SomeUnsignedInt](r:array[R,T]): array[R,SkillIndex] =
+proc toSkills*[R,T:SomeInteger|SomeUnsignedInt](r:array[R,T]): array[R,SkillIndex] =
     for idx,s in pairs(r):
-        skill_assert(s)
+        skillAssert(s)
         result[idx] = SkillIndex(s)
 
-proc to_effects*[R,T:SomeInteger|SomeUnsignedInt](r:array[R,T]): array[R,EffectIndex] =
+proc toEffects*[R,T:SomeInteger|SomeUnsignedInt](r:array[R,T]): array[R,EffectIndex] =
     for idx,e in pairs(r):
-        effect_assert(e)
+        effectAssert(e)
         result[idx] = EffectIndex(e)
 
-func item_count*[T:int32|uint32](r:CarriedObject[T]): T = r.count
-func item_name*[T:int32|uint32](r:CarriedObject[T]): string = stripNull(r.name)
+func itemCount*[T:int32|uint32](r:CarriedObject[T]): T = r.count
+func itemName*[T:int32|uint32](r:CarriedObject[T]): string = stripNull(r.name)
 
 
-func to_color*(r: RGBA): Color = rgb(r.r, r.g, r.b)
-func to_color*(r: RGB): Color = rgb(r.r, r.g, r.b)
-func to_color*(r: RGBO): Color = rgb(r.r, r.g, r.b)
+func toColor*(r: RGBA): Color = rgb(r.r, r.g, r.b)
+func toColor*(r: RGB): Color = rgb(r.r, r.g, r.b)
+func toColor*(r: RGBO): Color = rgb(r.r, r.g, r.b)
 
-proc `$`*(r: RGBA): string = $to_color(r)
-proc `$`*(r: RGB): string = $to_color(r)
-proc `$`*(r: RGBO): string = $to_color(r)
+proc `$`*(r: RGBA): string = $toColor(r)
+proc `$`*(r: RGB): string = $toColor(r)
+proc `$`*(r: RGBO): string = $toColor(r)
 
-proc dele_flag*(r: TES3Record): bool = has_flag(r.flags, 0x0020)
-proc persist_ref*(r: TES3Record): bool = has_flag(r.flags, 0x0400)
-proc init_disabled*(r: TES3Record): bool = has_flag(r.flags, 0x0800)
+proc deleFlag*(r: TES3Record): bool = has_flag(r.flags, 0x0020)
+proc persistRef*(r: TES3Record): bool = has_flag(r.flags, 0x0400)
+proc initDisabled*(r: TES3Record): bool = has_flag(r.flags, 0x0800)
 proc blocked*(r: TES3Record): bool = has_flag(r.flags, 0x2000)
 
 func hello*(r: AIData): uint8 = r.hello
@@ -507,43 +516,57 @@ func fight*(r: AIData): uint8 = r.fight
 func flee*(r: AIData): uint8 = r.flee
 func alarm*(r: AIData): uint8 = r.alarm
 
-let aiServiceLookup = [flagtup(AI_WEAPON,AWeapon),flagtup(AI_ARMOR,AArmor),
-    flagtup(AI_CLOTH,AClothing),flagtup(AI_BOOKS,ABooks),flagtup(AI_INGR,AIngr),
-    flagtup(AI_PICKS,APicks),flagtup(AI_PROBES,AProbes),flagtup(AI_LIGHTS,ALights),
-    flagtup(AI_APPA,AAppa),flagtup(AI_RPITEMS,ARepairItems),flagtup(AI_MISC,AMisc),
-    flagtup(AI_SPELLS,ASpells),flagtup(AI_MGITEM,AMagic),flagtup(AI_POTIONS,APotions),
-    flagtup(AI_TRAIN,ATraining),flagtup(AI_SPELLMAKING,ASpellmaking),
-    flagtup(AI_ENCHANT,AEnchant),flagtup(AI_REPAIR,ARepair)]
+const SERV_WEAP = (AI_WEAPON,AWeapon)
+const SERV_ARMO = (AI_ARMOR,AArmor)
+const SERV_CLOTH = (AI_CLOTH,AClothing)
+const SERV_BOOKS = (AI_BOOKS,ABooks)
+const SERV_INGR = (AI_INGR,AIngr)
+const SERV_PICK = (AI_PICKS,APicks)
+const SERV_PROB = (AI_PROBES,AProbes)
+const SERV_LIGHT = (AI_LIGHTS,ALights)
+const SERV_APPA = (AI_APPA,AAppa)
+const SERV_MISC = (AI_MISC,AMisc) 
+const SERV_REPA_ITEM = (AI_RPITEMS,ARepairItems)
+const SERV_SPEL = (AI_SPELLS,ASpells)
+const SERV_MAGIC_ITEM = (AI_MGITEM,AMagic)
+const SERV_POTION = (AI_POTIONS,APotions)
+const SERV_TRAIN = (AI_TRAIN,ATraining)
+const SERV_SPELL_MAKE = (AI_SPELLMAKING,ASpellmaking)
+const SERV_ENCHANT = (AI_ENCHANT,AEnchant)
+const SERV_REPAIR = (AI_REPAIR,ARepair)
+
+const aiServiceLookup = [SERV_APPA,SERV_ARMO,SERV_BOOKS,SERV_CLOTH,SERV_ENCHANT,SERV_INGR,SERV_LIGHT,SERV_MAGIC_ITEM,SERV_MISC,SERV_PICK,SERV_POTION,
+                        SERV_PROB,SERV_REPA_ITEM,SERV_REPAIR,SERV_SPEL,SERV_SPELL_MAKE,SERV_TRAIN,SERV_WEAP]
 
 proc flags*(r: AIData): set[AIServices] = 
     for _,f in aiServiceLookup:
         let (check,incl) = f
-        if has_flag(r.flags,check):
+        if hasFlag(r.flags,check):
             result.incl(incl)
 
 
-func travel_dest*(r: CellTravelData): CellPosition = r.DODT
-func prev_dest_name*(r: CellTravelData): Option[string] = r.DNAM
+func travelDest*(r: CellTravelData): CellPosition = r.DODT
+func prevDestName*(r: CellTravelData): Option[string] = r.DNAM
 
 proc effect*(r: EnchantmentData): EffectIndex = 
-    effect_assert(r.effect_idx)
+    effectAssert(r.effect_idx)
     EffectIndex(r.effect_idx)
-proc attr_affected*(r: EnchantmentData): AttributeIndex = 
-    attribute_assert(r.attribute)
+proc attrAffected*(r: EnchantmentData): AttributeIndex = 
+    attributeAssert(r.attribute)
     AttributeIndex(r.attribute)
-proc skill_affected*(r: EnchantmentData): SkillIndex = 
-    skill_assert(r.skill)
+proc skillAffected*(r: EnchantmentData): SkillIndex = 
+    skillAssert(r.skill)
     SkillIndex(r.skill)
-func effect_range*(r:EnchantmentData): SpellRange = SpellRange(r.erang)
+func effectRange*(r:EnchantmentData): SpellRange = SpellRange(r.erang)
 func aoe*(r: EnchantmentData): uint32 = r.area
 func duration*(r: EnchantmentData): uint32 = r.duration
 func magnitude*(r: EnchantmentData): tuple[min: uint32, max: uint32] = (
     min: r.mag_min, max: r.mag_max)
 
 
-func item_slot*(r: BipedObject): ItemSlot = ItemSlot(uint8(r.INDX))
-func male_name*(r: BipedObject): Option[string] = r.BNAM
-func female_name*(r: BipedObject): Option[string] =
+func itemSlot*(r: BipedObject): ItemSlot = ItemSlot(uint8(r.INDX))
+func maleName*(r: BipedObject): Option[string] = r.BNAM
+func femaleName*(r: BipedObject): Option[string] =
     if isSome(r.CNAM):
         return r.CNAM
     else:
@@ -560,7 +583,7 @@ func skills*(r:NPCStats):array[27,SkillIndex] =
         result[idx] = SkillIndex(s)
 
 func health*(r:NPCStats): uint16 = r.health
-func spell_points*(r:NPCStats): uint16 = r.spell_pts
+func spellPoints*(r:NPCStats): uint16 = r.spell_pts
 func fatigue*(r:NPCStats): uint16 = r.fatigue
 
 const INDENT* = 2
@@ -632,4 +655,4 @@ proc `T$`*[T: TES3Record](r: T): string =
         else:
             result.add indent(key & ":" & stripNull(`T$`(value)), INDENT) & "\n"
 
-export hasFlag,stripNull,zsize,dtag,INDENTAMT
+export stripNull,INDENTAMT

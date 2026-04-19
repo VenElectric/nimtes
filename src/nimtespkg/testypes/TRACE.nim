@@ -24,12 +24,13 @@ using
 func name*(r): string = r.NAME
 func race_name*(r): Option[string] = r.FNAM
 func data*(r): RaceData = r.RADT
-proc skill_bonuses*(r): array[7,tuple[skill:SkillIndex,bonus:int32]] =
+proc skillBonuses*(r): array[7,tuple[skill:SkillIndex,bonus:int32]] =
     for idx,s in data(r).skill_bonuses:
         let id = s.id
         let bonus = s.bonus
-        skill_assert(id)
+        skillAssert(id)
         result[idx] = (skill:SkillIndex(id),bonus:bonus)
+func desc*(r): Option[string] = r.DESC
 
 proc `$`*(r): string =
     result = "RACE"

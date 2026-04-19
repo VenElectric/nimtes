@@ -12,6 +12,11 @@ type
 
 using
     r:PROB
+
+func id*(r): string = r.NAME
+func modelPath*(r): string = r.MODL
+func iconPath*(r): Option[string] = r.ITEX
+func scriptName*(r): Option[string] = r.SCRI
     
 proc `$`*(r): string = 
     result = "PROB"

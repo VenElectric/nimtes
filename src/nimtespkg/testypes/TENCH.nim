@@ -18,13 +18,13 @@ type
 
 func id*(r:ENCH): string = r.NAME
 func data*(r:ENCH): EnchantmentInfo = r.ENDT
-proc enchant_kind*(r:ENCH): EnchantKind = 
+proc enchantKind*(r:ENCH): EnchantKind = 
     let kind = data(r).kind
     assert(kind < 4,"Enchant kind > 3")
     EnchantKind(kind)
-func enchant_cost*(r:ENCH): uint32 = data(r).cost
-func enchant_charge*(r:ENCH): uint32 = data(r).charge
-proc auto_calc*(r:ENCH): bool = has_flag(data(r).flags,AUTO_CALC)
+func enchantCost*(r:ENCH): uint32 = data(r).cost
+func enchantCharge*(r:ENCH): uint32 = data(r).charge
+proc autoCalc*(r:ENCH): bool = hasFlag(data(r).flags,AUTO_CALC)
 func enchantments*(r:ENCH): seq[EnchantmentData] = r.ENAM
 
 

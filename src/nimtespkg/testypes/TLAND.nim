@@ -2,6 +2,7 @@ import std/options
 import record
 
 type
+    TextureIndices = array[16,array[16,uint16]]
     VertexNormal* = object
         x,y,z:int8
     HeightData* = ref object of DataField
@@ -15,20 +16,24 @@ type
         VHGT: Option[HeightData]
         WNAM: Option[array[9,array[9,uint8]]]
         VCLR: Option[array[65,array[65,RGBO]]]
-        VTEX: Option[array[16,array[16,uint16]]]
+        VTEX: Option[TextureIndices]
+        # VTEX: Option[array[16,array[16,uint16]]] shows as array[0..8,array[0..8,uint16]]
+        # and causes error in textureIndices accessor. no compile error as far as I'm aware...
+        # but the lsp error is a little annoying
+        # using a type alias resolves this issue
 
 using
     r:LAND
 
 func coordinates*(r): Coords = r.INTV
-func data_types*(r):uint32 = r.DATA
-func vertex_normals*(r):array[65,array[65,VertexNormal]] = r.VNML
+func dataTypes*(r):uint32 = r.DATA
+func vertexNormals*(r):array[65,array[65,VertexNormal]] = r.VNML
 func data*(r): Option[HeightData] = r.VHGT
 func offset*(r:HeightData): float32 = r.offset
-func height_data*(r:HeightData): array[65,array[65,int8]] = r.height_data
-func world_heights*(r): Option[array[9,array[9,uint8]]] = r.WNAM
-func vertex_colors*(r): Option[array[65,array[65,RGBO]]] = r.VCLR
-func texture_indices*(r): Option[array[16,array[16,uint16]]] = r.VTEX
+func heightData*(r:HeightData): array[65,array[65,int8]] = r.height_data
+func worldHeights*(r): Option[array[9,array[9,uint8]]] = r.WNAM
+func vertexColors*(r): Option[array[65,array[65,RGBO]]] = r.VCLR
+func textureIndices*(r): Option[TextureIndices] = r.VTEX
 
 proc `$`*(r): string =
     result = "LAND"

@@ -1,4 +1,5 @@
-import std/[streams, macros, options, strformat,tables]
+import std/[streams, macros, options, strformat,tables,parsecfg]
+from lexbase import NewLines
 import util
 import testypes
 using
@@ -139,6 +140,7 @@ proc readField(s; dst: var ActivatePkg; tags: var TagFields)
 proc readfield(s; dst: var FollowerData; tags: var TagFields)
 proc readField(s;dst: var NPCData;tags: var Tagfields)
 proc readField(s;dst: var ScriptData;tags: var TagFields)
+proc readField*(s;dst: var WeatherChances;tags: var TagFields)
 
 proc readField(s; dst: var char; tags: var TagFields) =
     dst = s.readChar()
@@ -352,7 +354,20 @@ proc readField[T](s; dst: var seq[T]; tags: var TagFields) =
     readField(s, temp, tags)
     dst.add temp
 
-
+proc readField*(s;dst: var WeatherChances;tags: var TagFields) =
+    let size = peek(tags).size
+    read(s,dst.clear)
+    read(s,dst.cloudy)
+    read(s,dst.foggy)
+    read(s,dst.overcast)
+    read(s,dst.rain)
+    read(s,dst.thunder)
+    read(s,dst.ash)
+    read(s,dst.blight)
+    if size == 10:
+        read(s,dst.snow)
+        read(s,dst.blizzard)
+    next(tags)
 
 proc readField[T: object](s; dst: var T; tags: var Tagfields) =
     if atEnd(tags):
@@ -428,3 +443,40 @@ proc readAllRecordofType*[T:TES3Record](s;dst:typedesc[T]): seq[T] =
             consumeTag(s)
             let size = readSize(s)
             skip(s,size+8)
+
+proc readMorrowindIni*(iniPath:string): Config = 
+    result = newConfig()
+    var cfg = CfgParser()
+    open(cfg,newFileStream(iniPath),"Morrowind.ini")
+    var evt = next(cfg)
+    var currSection:string
+    while evt.kind != cfgEof:
+        case evt.kind:
+        of cfgSectionStart:
+            currSection = evt.section
+            result[currSection] = newOrderedTable[string,string]()
+        of cfgKeyValuePair: 
+            var tab = result[currSection]
+            tab[evt.key] = evt.value
+            result[currSection] = tab
+        of cfgOption:
+            var tab = result[currSection]
+            tab["--" & evt.key] = evt.value
+            result[currSection] = tab
+        of cfgError:
+            let col = getColumn(cfg) + 3
+            dec(cfg.bufpos,col)
+            while cfg.buf[cfg.bufpos] notin Newlines:
+                dec(cfg.bufpos)
+            inc(cfg.bufpos)
+            var key:string
+            while cfg.buf[cfg.bufpos] != '=':
+                key.add cfg.buf[cfg.bufpos]
+                inc(cfg.bufpos)
+            var tab = result[currSection]
+            tab[key] = ""
+            result[currSection] = tab
+            inc(cfg.bufpos)
+        else:
+            discard # cfgeof unreachable
+        evt = next(cfg)

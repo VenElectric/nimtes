@@ -55,26 +55,26 @@ type
         AVFX: Option[string]
         DESC: Option[string]
 
-const FTTargetsSkill = flagtup(0x00001, METargetsSkill)
-const FTTargetsAttribute = flagtup(0x00002, METargetsAttribute)
-const FTNoDuration = flagtup(0x00004, MENoDuration)
-const FTNoMagnitude = flagtup(0x00008, MENoMagnitude)
-const FTHarmful = flagtup(0x00010, MEHarmful)
-const FTContinuousVFX = flagtup(0x00020, MEContinuousVFX)
-const FTCanCastOnSelf = flagtup(0x00040, MECanCastSelf)
-const FTCanCastOnTouch = flagtup(0x00080, MECanCastTouch)
-const FTCanCastOnTarget = flagtup(0x00100, MECanCastTarget)
-const FTSpellmaking = flagtup(0x00200, MESpellMaking)
-const FTEnchanting = flagtup(0x00400, MEEnchanting)
-const FTNegativeLighting = flagtup(0x00800, MENegLight)
-const FTAppliedOnce = flagtup(0x01000, MEApplyOnce)
-const FTStealth = flagtup(0x02000, MEStealth)
-const FTCannotRecast = flagtup(0x04000, MECantRecast)
-const FTIllegalDaedra = flagtup(0x08000, MEIllDeadra)
-const FTUnreflectable = flagtup(0x10000, MENoReflect)
-const FTLinkedToCaster = flagtup(0x20000, MELinkCaster)
+const FTTargetsSkill: (uint32,MagicEffectFlags) = (0x00001, METargetsSkill)
+const FTTargetsAttribute: (uint32,MagicEffectFlags) = (0x00002, METargetsAttribute)
+const FTNoDuration: (uint32,MagicEffectFlags) = (0x00004, MENoDuration)
+const FTNoMagnitude: (uint32,MagicEffectFlags) = (0x00008, MENoMagnitude)
+const FTHarmful: (uint32,MagicEffectFlags) = (0x00010, MEHarmful)
+const FTContinuousVFX: (uint32,MagicEffectFlags) = (0x00020, MEContinuousVFX)
+const FTCanCastOnSelf: (uint32,MagicEffectFlags) = (0x00040, MECanCastSelf)
+const FTCanCastOnTouch: (uint32,MagicEffectFlags) = (0x00080, MECanCastTouch)
+const FTCanCastOnTarget: (uint32,MagicEffectFlags) = (0x00100, MECanCastTarget)
+const FTSpellmaking: (uint32,MagicEffectFlags) = (0x00200, MESpellMaking)
+const FTEnchanting: (uint32,MagicEffectFlags) = (0x00400, MEEnchanting)
+const FTNegativeLighting: (uint32,MagicEffectFlags) = (0x00800, MENegLight)
+const FTAppliedOnce: (uint32,MagicEffectFlags) = (0x01000, MEApplyOnce)
+const FTStealth: (uint32,MagicEffectFlags) = (0x02000, MEStealth)
+const FTCannotRecast: (uint32,MagicEffectFlags) = (0x04000, MECantRecast)
+const FTIllegalDaedra: (uint32,MagicEffectFlags) = (0x08000, MEIllDeadra)
+const FTUnreflectable: (uint32,MagicEffectFlags) = (0x10000, MENoReflect)
+const FTLinkedToCaster: (uint32,MagicEffectFlags) = (0x20000, MELinkCaster)
 
-let meFlagLookup = [FTTargetsSkill, FTTargetsAttribute, FTNoDuration,
+const meFlagLookup = [FTTargetsSkill, FTTargetsAttribute, FTNoDuration,
         FTNoMagnitude, FTHarmful, FTContinuousVFX,
 FTCanCastOnSelf, FTCanCastOnTarget, FTCanCastOnTouch, FTSpellmaking,
         FTEnchanting, FTNegativeLighting, FTAppliedOnce,
@@ -84,7 +84,7 @@ using
     r: MGEF
 
 proc id*(r): EffectIndex =
-    effect_assert(r.INDX)
+    effectAssert(r.INDX)
     result = EffectIndex(r.INDX)
 
 func data*(r): MagicEffectData = r.MEDT
@@ -92,7 +92,7 @@ proc school*(r): SpellSchool =
     let idx = data(r).school
     assert(idx < 6, "Magic School Index > 5: " & $idx)
     SpellSchool(idx)
-func base_cost*(r): float32 = data(r).base_cost
+func baseCost*(r): float32 = data(r).base_cost
 
 proc flags*(r): set[MagicEffectFlags] =
     let f = data(r).flags
@@ -101,24 +101,24 @@ proc flags*(r): set[MagicEffectFlags] =
         if hasFlag(f, check):
             result.incl(incl)
 
-func lighting_red*(r): uint32 = data(r).red
-func lighting_green*(r): uint32 = data(r).green
-func lighting_blue*(r): uint32 = data(r).blue
+func lightingRed*(r): uint32 = data(r).red
+func lightingGreen*(r): uint32 = data(r).green
+func lightingBlue*(r): uint32 = data(r).blue
 
 func speed*(r): float32 = data(r).speed_x
 func size*(r): float32 = data(r).size_x
-func size_cap*(r): float32 = data(r).size_cap
+func sizeCap*(r): float32 = data(r).size_cap
 
-func effect_icon*(r): Option[string] = r.ITEX
-func particle_texture*(r): Option[string] = r.PTEX
-func bolt_sound*(r): Option[string] = r.BSND
-func casting_sound*(r): Option[string] = r.CSND
-func hit_sound*(r): Option[string] = r.HSND
-func area_sound*(r): Option[string] = r.ASND
-func casting_vfx*(r): Option[string] = r.CVFX
-func bolt_vfx*(r): Option[string] = r.BVFX
-func hit_vfx*(r): Option[string] = r.HVFX
-func area_vfx*(r): Option[string] = r.AVFX
+func effectIcon*(r): Option[string] = r.ITEX
+func particleTexture*(r): Option[string] = r.PTEX
+func boltSound*(r): Option[string] = r.BSND
+func castingSound*(r): Option[string] = r.CSND
+func hitSound*(r): Option[string] = r.HSND
+func areaSound*(r): Option[string] = r.ASND
+func castingVfx*(r): Option[string] = r.CVFX
+func boltVfx*(r): Option[string] = r.BVFX
+func hitVfx*(r): Option[string] = r.HVFX
+func areaVfx*(r): Option[string] = r.AVFX
 func desc*(r): Option[string] = r.DESC
 
 proc `$`*(r): string =

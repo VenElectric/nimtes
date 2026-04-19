@@ -1,4 +1,3 @@
-import std/options
 import record
 
 type
@@ -17,14 +16,14 @@ using
 
 func id*(r): string = r.NAME
 func flags*(r): uint32 = r.DATA
-proc calc_each*(r): bool = has_flag(flags(r),0x1)
-proc calc_all_levels*(r): bool = has_flag(flags(r),0x2)
-func chance_none*(r): uint8 = r.NNAM
-func item_count*(r): uint32 = r.INDX
+proc calcEach*(r): bool = hasFlag(flags(r),0x1)
+proc calcAllLevels*(r): bool = hasFlag(flags(r),0x2)
+func chanceNone*(r): uint8 = r.NNAM
+func itemCount*(r): uint32 = r.INDX
 func items*(r): seq[Item] = seq[Item](r.INAM)
 
-func item_name*(r:Item): string = r.INAM
-func pc_level*(r:Item): uint16 = r.INTV
+func itemName*(r:Item): string = r.INAM
+func pcLevel*(r:Item): uint16 = r.INTV
 
 proc `$`*(r): string =
     result = "LEVI"

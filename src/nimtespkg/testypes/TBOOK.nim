@@ -22,18 +22,18 @@ using
     r:BOOK
 
 func id*(r): string = stripNull(r.NAME)
-func model_name*(r): string = stripNull(r.MODL)
+func modelPath*(r): string = stripNull(r.MODL)
 func name*(r): Option[string] = r.FNAM
-func book_text*(r): Option[string] = r.TEXT
-func script_name*(r): Option[string] = r.SCRI
-func icon_path*(r): Option[string] = r.ITEX
+func bookText*(r): Option[string] = r.TEXT
+func scriptName*(r): Option[string] = r.SCRI
+func iconPath*(r): Option[string] = r.ITEX
 func enchantment*(r): Option[string] = r.ENAM
 func data(r): BookData = r.BKDT
 func weight*(r): float32 = data(r).weight
 func value*(r): uint32 = data(r).value
-func skill_id*(r): int32 = r.BKDT.skill_id
-func enchant_points*(r): uint32 = data(r).enchant_pts
-proc is_scroll*(r): bool = has_flag(data(r).flags,0x1)
+func skillId*(r): int32 = r.BKDT.skill_id
+func enchantPoints*(r): uint32 = data(r).enchant_pts
+proc isScroll*(r): bool = hasFlag(data(r).flags,0x1)
 
 proc `$`*(r: BOOK): string =
     result = "BOOK"

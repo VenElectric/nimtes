@@ -19,15 +19,15 @@ const MASTER_FLAG: uint32 = 0x1
 using 
     r:TES3
 
-func master_files*(r): seq[MasterFile] = seq[MasterFile](r.MAST)
-func file_name*(r: MasterFile): string = r.MAST
-func data_size*(r: MasterFile): uint64 = r.DATA
+func masterFiles*(r): seq[MasterFile] = seq[MasterFile](r.MAST)
+func fileName*(r: MasterFile): string = r.MAST
+func dataSize*(r: MasterFile): uint64 = r.DATA
 func header*(r): HeaderData = r.HEDR
 func version*(r): float32 = r.HEDR.version
-proc is_master*(r): bool = has_flag(r.HEDR.flags, MASTER_FLAG)
+proc isMaster*(r): bool = hasFlag(r.HEDR.flags, MASTER_FLAG)
 func author*(r): string = r.HEDR.author
-func file_desc*(r): string = r.HEDR.fileDesc
-func num_records*(r): uint32 = r.HEDR.numRecords
+func fileDesc*(r): string = r.HEDR.fileDesc
+func numRecords*(r): uint32 = r.HEDR.numRecords
 
 
 

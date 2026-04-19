@@ -32,40 +32,37 @@ using
 
 func id*(r): string = stripNull(r.NAME)
 func name*(r): string = stripNull(r.FNAM)
-func rank_names*(r): seq[string] =
+func rankNames*(r): seq[string] =
     result = r.RNAM
     apply(result, stripNull)
-func faction_data*(r): FactionData = r.FADT
-proc faction_attrs*(r): array[2, AttributeIndex] = to_attributes(faction_data(r).attributes)
-func faction_skills*(r): array[7, SkillIndex] = to_skills(faction_data(r).skills)
-func rank_data*(r): array[10, NamedRankData] =
-    let names = rank_names(r)
-    let rd = faction_data(r).rank_data
+func data*(r): FactionData = r.FADT
+proc factionAttrs*(r): array[2, AttributeIndex] = toAttributes(data(r).attributes)
+func factionSkills*(r): array[7, SkillIndex] = toSkills(data(r).skills)
+func rankData*(r): array[10, NamedRankData] =
+    let names = rankNames(r)
+    let rd = data(r).rank_data
     assert(len(names) <= 10, "Rank names in practice should have 10 or less records. This one doesn't: " &
             id(r))
     for idx, rn in names:
         result[idx] = (name: rn, data: rd[idx])
-func get_rank_data*(r; rank: range[0..9]): RankData = faction_data(r).rank_data[rank]
-proc attr_mods*(r; nrd: NamedRankData): array[2, RankAttrMods] =
-    let attrs = faction_attrs(r)
+func getRankData*(r; rank: range[0..9]): RankData = data(r).rank_data[rank]
+proc attrMods*(r; nrd: NamedRankData): array[2, RankAttrMods] =
+    let attrs = factionAttrs(r)
     for idx, a in pairs(nrd.data.attribute_mods):
         result[idx] = (rank_name: nrd.name, attribute: attrs[idx], modifier: a)
-proc all_attr_mods*(r): array[10, array[2, RankAttrMods]] =
-    for idx, rd in pairs(rank_data(r)):
-        result[idx] = attr_mods(r, rd)
+proc allAttrMods*(r): array[10, array[2, RankAttrMods]] =
+    for idx, rd in pairs(rankData(r)):
+        result[idx] = attrMods(r, rd)
 
 proc stripAnam(r: ReactionData): ReactionData =
     result.ANAM = stripNull(r.ANAM)
     result.INTV = r.INTV
-func reaction_data*(r): seq[ReactionData] =
+func reactionData*(r): seq[ReactionData] =
     result = seq[ReactionData](r.ANAM)
     apply(result, stripAnam)
-func faction_name*(r: ReactionData): string = r.ANAM
-func reaction_value*(r: ReactionData): int32 = r.INTV
-# attribute_mods: array[2, uint32]
-#         prim_skill_mod: uint32
-#         fav_skill_mod: uint32
-#         fact_react_mod: uint32
+func factionName*(r: ReactionData): string = r.ANAM
+func reactionValue*(r: ReactionData): int32 = r.INTV
+
 proc `$`*(r: RankData): string =
     result.add indent("attribute_mods:" & $r.attribute_mods, INDENT)
     result.add indent("prim_skill_mod:" & $r.prim_skill_Mod, INDENT)

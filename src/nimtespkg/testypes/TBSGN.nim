@@ -12,7 +12,7 @@ type
 func id*(r:BSGN): string = r.NAME
 func name*(r:BSGN): Option[string] = r.FNAM
 func spells*(r:BSGN): seq[string] = r.NPCS
-func texture_path*(r:BSGN): Option[string] = r.TNAM
+func texturePath*(r:BSGN): Option[string] = r.TNAM
 func desc*(r:BSGN): Option[string] = r.DESC
 
 proc `$`*(r:BSGN): string =

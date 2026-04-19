@@ -34,15 +34,15 @@ func attrs*(r): array[4,int32] = data(r).attrs # ^^^^^^^
 
 # cross lookup effect with MGEF for comparison. or not...idk
 # do we even need this?
-func ingredient_level_data*(r): array[4,IngredientLevel] = 
+func ingredientLevelData*(r): array[4,IngredientLevel] = 
     let e = effects(r)
     let s = skills(r)
     let a = attrs(r)
     for idx in 0..3:
         result[idx] = (effect:e[idx],skill:s[idx],attribute:a[idx])
 
-func script_name*(r): Option[string] = r.SCRI
-func icon_path*(r): Option[string] = r.ITEX
+func scriptName*(r): Option[string] = r.SCRI
+func iconPath*(r): Option[string] = r.ITEX
 
 proc `$`*(r): string =
     result = "INGR"

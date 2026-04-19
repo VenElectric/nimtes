@@ -16,15 +16,15 @@ using
     r:LEVC
 
 func id*(r): string = r.NAME
-func chance_of_none*(r): uint8 = r.NNAM
-proc calc_all_levels*(r): bool = has_flag(r.DATA,0x1)
-func creature_count*(r): uint32 =
+func chanceOfNone*(r): uint8 = r.NNAM
+proc calcAllLevels*(r): bool = hasFlag(r.DATA,0x1)
+func creatureCount*(r): uint32 =
     result = 0
     if isSome(r.INDX):
         result = get(r.INDX)
-func creature_list*(r): seq[Creature] = seq[Creature](r.CNAM)
-func creature_name*(r:Creature): string = r.CNAM
-func pc_level*(r:Creature): uint16 = r.INTV
+func creatureList*(r): seq[Creature] = seq[Creature](r.CNAM)
+func creatureName*(r:Creature): string = r.CNAM
+func pcLevel*(r:Creature): uint16 = r.INTV
 
 proc `$`*(r): string =
     result = "LEVC"

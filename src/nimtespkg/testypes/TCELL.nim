@@ -54,6 +54,8 @@ type
         MVRF{.dtag("Moved References").}: TagList[MovedRef]
         FRMR{.dtag("Persistent Children").}: TagList[FormRef]
         NAM0: Option[TemporaryChildren]
+
+# NAM0.FRMR.0.FRMR
 # 0x01 = Interior
 
 # tag definitions
@@ -82,24 +84,24 @@ using
 
 proc data*(r): CellData = r.DATA
 
-func map_color*(r): Option[RGBA] = r.NAM5
+func mapColor*(r): Option[RGBA] = r.NAM5
 
 proc flags*(r): set[CellFlags] =
-    if has_flag(data(r).flags,INTR):
+    if hasFlag(data(r).flags,INTR):
         result.incl Interior
-    if has_flag(data(r).flags,WATER):
+    if hasFlag(data(r).flags,WATER):
         result.incl HasWater
-    if has_flag(data(r).flags,ILLSLP):
+    if hasFlag(data(r).flags,ILLSLP):
         result.incl IllSleep
-    if has_flag(data(r).flags,BHVEXT):
+    if hasFlag(data(r).flags,BHVEXT):
         result.incl BehaveExt
 
-func ambient_light*(r): Option[AmbientLight] = r.AMBI
+func ambientLight*(r): Option[AmbientLight] = r.AMBI
 
-proc ambient_color*(r: AmbientLight): Color = to_color(r.amcolor)
-proc sun_color*(r: AmbientLight): Color = to_color(r.suncolor)
-proc fog_color*(r: AmbientLight): Color = to_color(r.fogcolor)
-func fog_density*(r: AmbientLight): float32 = r.fogdens
+proc ambientColor*(r: AmbientLight): Color = toColor(r.amcolor)
+proc sunColor*(r: AmbientLight): Color = toColor(r.suncolor)
+proc fogColor*(r: AmbientLight): Color = toColor(r.fogcolor)
+func fogDensity*(r: AmbientLight): float32 = r.fogdens
 
 proc name*(r: CELL): Option[string] =
     if len(r.NAME) > 1:
@@ -107,29 +109,29 @@ proc name*(r: CELL): Option[string] =
 
 proc region*(r: CELL): Option[string] = r.RGNN
 
-proc cell_name*(r: CELL): string =
+proc cellName*(r: CELL): string =
     if len(r.NAME) > 1:
         return stripNull(r.NAME)
     else:
         assert(isSome(region(r)), "Name < 2 and RGNN is none")
         return stripNull(get(region(r)))
 
-func moved_refs*(r: CELL): seq[MovedRef] = seq[MovedRef](r.MVRF)
+func movedRefs*(r: CELL): seq[MovedRef] = seq[MovedRef](r.MVRF)
 
-func moved_ref_id*(r: MovedRef): uint32 = r.MVRF
-func moved_ref_cell_name*(r: MovedRef): Option[string] = r.CNAM
-func moved_coordiantes*(r: MovedRef): Option[Coords] = r.CNDT
-func moved_ref*(r: MovedRef): Option[FormRef] = r.FRMR
+func movedRefId*(r: MovedRef): uint32 = r.MVRF
+func movedRefCellName*(r: MovedRef): Option[string] = r.CNAM
+func movedCoordiantes*(r: MovedRef): Option[Coords] = r.CNDT
+func movedRef*(r: MovedRef): Option[FormRef] = r.FRMR
 
-proc persistent_children*(r: CELL): seq[FormRef] = seq[FormRef](r.FRMR)
+proc persistentChildren*(r: CELL): seq[FormRef] = seq[FormRef](r.FRMR)
 
 
-proc temp_children_count*(r: CELL): uint32 =
+proc tempChildrenCount*(r: CELL): uint32 =
     result = 0
     if isSome(r.NAM0):
         result = get(r.NAM0).NAM0
 
-proc temporary_children*(r: CELL): seq[FormRef] =
+proc temporaryChildren*(r: CELL): seq[FormRef] =
     result = @[]
     if isSome(r.NAM0):
         result = seq[FormRef](get(r.NAM0).FRMR)
@@ -137,84 +139,84 @@ proc temporary_children*(r: CELL): seq[FormRef] =
 
 
 
-func ref_id*(r: FormRef): uint32 = r.FRMR
-func ref_name*(r: FormRef): string = stripNull(r.NAME)
+func refId*(r: FormRef): uint32 = r.FRMR
+func refName*(r: FormRef): string = stripNull(r.NAME)
 func scale*(r: FormRef): float32 =
     if isSome(r.XSCL):
         return get(r.XSCL)
     else:
         return 1.0
 
-func npc_id*(r: FormRef): Option[string] = r.ANAM
-func faction_id*(r: FormRef): Option[string] = r.CNAM
-func soul_id*(r: FormRef): Option[string] = r.XSOL
+func npcId*(r: FormRef): Option[string] = r.ANAM
+func factionId*(r: FormRef): Option[string] = r.CNAM
+func soulId*(r: FormRef): Option[string] = r.XSOL
 func charge*(r: FormRef): Option[float32] = r.XCHG
-func usage_left*(r: FormRef): Option[float32] = r.INTV
+func usageLeft*(r: FormRef): Option[float32] = r.INTV
 func value*(r: FormRef): Option[uint32] = r.NAM9
-func cell_travel_dests*(r: FormRef): seq[CellTravelData] = seq[CellTravelData](r.DODT)
-func lock_diff*(r: FormRef): Option[uint32] = r.FLTV
-func key_name*(r: FormRef): Option[string] = r.KNAM
-func trap_name*(r: FormRef): Option[string] = r.TNAM
-func ref_pos*(r: FormRef): Option[CellPosition] = r.DATA
+func cellTravelDests*(r: FormRef): seq[CellTravelData] = seq[CellTravelData](r.DODT)
+func lockDiff*(r: FormRef): Option[uint32] = r.FLTV
+func keyName*(r: FormRef): Option[string] = r.KNAM
+func trapName*(r: FormRef): Option[string] = r.TNAM
+func refPos*(r: FormRef): Option[CellPosition] = r.DATA
 
 
-proc find_moved_reference*(r; id: string): Option[MovedRef] =
-    let mvrf = moved_refs(r)
+proc findMovedReference*(r; id: string): Option[MovedRef] =
+    let mvrf = movedRefs(r)
     if len(mvrf) > 0:
         let results = collect(newSeq):
             for m in mvrf:
-                if isSome(moved_ref(m)):
-                    let r = get(moved_ref(m))
-                    if ref_name(r) == id: m
+                if isSome(movedRef(m)):
+                    let r = get(movedRef(m))
+                    if refName(r) == id: m
         if len(results) > 0:
             result = some(results[0])
 
-proc find_moved_reference*(r;id: uint32): Option[MovedRef] =
-    let mvrf = moved_refs(r)
+proc findMovedReference*(r;id: uint32): Option[MovedRef] =
+    let mvrf = movedRefs(r)
     if len(mvrf) > 0:
         let results = collect(newSeq):
             for m in mvrf:
-                    if moved_ref_id(m) == id: m
+                    if movedRefId(m) == id: m
         if len(results) > 0:
             result = some(results[0])
 
-proc find_persist_reference*(r; id: string): Option[FormRef] =
-    let fr = persistent_children(r)
+proc findPersistReference*(r; id: string): Option[FormRef] =
+    let fr = persistentChildren(r)
     if len(fr) > 0:
         let results = collect(newSeq):
             for m in fr:
-                if ref_name(m) == id: m
+                if refName(m) == id: m
         if len(results) > 0:
             result = some(results[0])
 
-proc find_persist_reference*(r; id: uint32): Option[FormRef] =
-    let fr = persistent_children(r)
+proc findPersistReference*(r; id: uint32): Option[FormRef] =
+    let fr = persistentChildren(r)
     if len(fr) > 0:
         let results = collect(newSeq):
             for m in fr:
-                if ref_id(m) == id: m
+                if refId(m) == id: m
         if len(results) > 0:
             let form = results[0]
-            assert(ref_id(form) == id)
+            assert(refId(form) == id)
             result = some(form)
 
 #NAME value
-proc find_temp_child*(r; id: string): Option[FormRef] = 
-    if temp_children_count(r) > 0:
-        let tc = temporary_children(r)
+proc findTempChild*(r; id: string): Option[FormRef] = 
+    if tempChildrenCount(r) > 0:
+        let tc = temporaryChildren(r)
         let results = collect(newSeq):
             for m in tc:
-                if ref_name(m) == id: m
+                if refName(m) == id: m
         if len(results) > 0:
             result = some(results[0])
 
 #FRMR value
-proc find_temp_child*(r; id: uint32): Option[FormRef] = 
-    if temp_children_count(r) > 0:
-        let tc = temporary_children(r)
+proc findTempChild*(r; id: uint32): Option[FormRef] = 
+    if tempChildrenCount(r) > 0:
+        let tc = temporaryChildren(r)
         let results = collect(newSeq):
             for m in tc:
-                if ref_id(m) == id: m
+                if refId(m) == id: m
         if len(results) > 0:
             result = some(results[0])
 
@@ -222,4 +224,4 @@ proc `$`*(r: CELL): string =
     result = "CELL"
     result.add `T$`(r)
 
-export travel_dest, prev_dest_name
+export travelDest, prevDestName

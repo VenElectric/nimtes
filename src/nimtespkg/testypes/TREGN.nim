@@ -27,21 +27,9 @@ type
 using
     r:REGN
 
-
-# proc readField*(s;dst: var WeatherChances;tags: var TagFields) =
-#     let size = peek(tags).size
-#     read(s,dst.clear)
-#     read(s,dst.cloudy)
-#     read(s,dst.foggy)
-#     read(s,dst.overcast)
-#     read(s,dst.rain)
-#     read(s,dst.thunder)
-#     read(s,dst.ash)
-#     read(s,dst.blight)
-#     if size == 10:
-#         read(s,dst.snow)
-#         read(s,dst.blizzard)
-#     next(tags)
+func id*(r): string = stripNull(r.NAME)
+func name*(r): string = stripNull(r.FNAM)
+func weatherChances*(r): WeatherChances = r.WEAT
 
 proc `$`*(r): string =
     result = "REGN"

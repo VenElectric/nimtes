@@ -26,8 +26,8 @@ proc kind*(r): SoundKind =
     assert(k < 8,"Sound type value not valid: " & $k)
     SoundKind(k)
 
-func creature_name*(r): Option[string] = r.CNAM
-func sound_id*(r): Option[string] = r.SNAM
+func creatureName*(r): Option[string] = r.CNAM
+func soundId*(r): Option[string] = r.SNAM
 
 proc `$`*(r): string =
     result = "SNDG"

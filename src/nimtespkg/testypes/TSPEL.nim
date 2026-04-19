@@ -1,4 +1,3 @@
-import std/options
 import record
 
 type
@@ -29,10 +28,10 @@ func kind*(r):SpellKind =
     let k = data(r).kind
     assert(k < 6,"Spell type number invalid: " & $k)
     SpellKind(k)
-func mana_cost*(r): uint32 = data(r).cost
-func auto_calc*(r): bool = has_flag(data(r).flags,0x1)
-func at_pc_start*(r): bool = has_flag(data(r).flags,0x2)
-func always_succeeds*(r): bool = has_flag(data(r).flags,0x4)
+func manaCost*(r): uint32 = data(r).cost
+func autoCalc*(r): bool = hasFlag(data(r).flags,0x1)
+func atPcStart*(r): bool = hasFlag(data(r).flags,0x2)
+func alwaysSucceeds*(r): bool = hasFlag(data(r).flags,0x4)
 func enchantments*(r): seq[EnchantmentData] = r.ENAM
 
 proc `$`*(r): string =

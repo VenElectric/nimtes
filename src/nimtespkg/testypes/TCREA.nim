@@ -55,112 +55,110 @@ type
         DODT: TagList[CellTravelData]
         Pkgs: seq[AI_Package]
 
-const FTBTRED = flagtup(0x0000,CRBloodType0)
-const FTBIPED = flagtup(0x0001,CRBiped)
-const FTRESP = flagtup(0x0002,CRRespawn)
-const FTWEAPSHIELD = flagtup(0x0004,CRWeapShield)
-const FTNONE = flagtup(0x0008,CRNone)
-const FTSWIM = flagtup(0x0010,CRSwims)
-const FTFLY = flagtup(0x0020,CRFlies)
-const FTWALK = flagtup(0x0040,CRWalks)
-const FTDEFAULT = flagtup(0x0048,CRDefault)
-const FTESS = flagtup(0x0080,CREssential)
-const FTBT1 = flagtup(0x0400,CRBloodType1)
-const FTBT2 = flagtup(0x0800,CRBloodType2)
-const FTBT3 = flagtup(0x0C00,CRBloodType3)
-const FTBT4 = flagtup(0x1000,CRBloodType4)
-const FTBT5 = flagtup(0x1400,CRBloodType5)
-const FTBT6 = flagtup(0x1800,CRBloodType6)
-const FTBT7 = flagtup(0x1C00,CRBloodType7)
+const FTBTRED: (uint32,CreatureFlags) = (0x0000,CRBloodType0)
+const FTBIPED: (uint32,CreatureFlags) = (0x0001,CRBiped)
+const FTRESP: (uint32,CreatureFlags) = (0x0002,CRRespawn)
+const FTWEAPSHIELD: (uint32,CreatureFlags) = (0x0004,CRWeapShield)
+const FTNONE: (uint32,CreatureFlags) = (0x0008,CRNone)
+const FTSWIM: (uint32,CreatureFlags) = (0x0010,CRSwims)
+const FTFLY: (uint32,CreatureFlags) = (0x0020,CRFlies)
+const FTWALK: (uint32,CreatureFlags) = (0x0040,CRWalks)
+const FTDEFAULT: (uint32,CreatureFlags) = (0x0048,CRDefault)
+const FTESS: (uint32,CreatureFlags) = (0x0080,CREssential)
+const FTBT1: (uint32,CreatureFlags) = (0x0400,CRBloodType1)
+const FTBT2: (uint32,CreatureFlags) = (0x0800,CRBloodType2)
+const FTBT3: (uint32,CreatureFlags) = (0x0C00,CRBloodType3)
+const FTBT4: (uint32,CreatureFlags) = (0x1000,CRBloodType4)
+const FTBT5: (uint32,CreatureFlags) = (0x1400,CRBloodType5)
+const FTBT6: (uint32,CreatureFlags) = (0x1800,CRBloodType6)
+const FTBT7: (uint32,CreatureFlags) = (0x1C00,CRBloodType7)
 
-let creaFlagLookups = [FTBIPED,FTBTRED,FTRESP,FTWEAPSHIELD,FTNONE,FTSWIM,FTFLY,FTWALK,FTDEFAULT,FTESS,FTBT1,FTBT2,FTBT3,FTBT4,FTBT5,FTBT6,FTBT7]
+const creaFlagLookups = [FTBIPED,FTBTRED,FTRESP,FTWEAPSHIELD,FTNONE,FTSWIM,FTFLY,FTWALK,FTDEFAULT,FTESS,FTBT1,FTBT2,FTBT3,FTBT4,FTBT5,FTBT6,FTBT7]
 
 using
     r:CREA
 
-func id*(r:CREA): string = stripNull(r.NAME)
-func model_path*(r:CREA): string = stripNull(r.MODL)
-func sound_gen*(r:CREA): Option[string] = r.CNAM
-func has_name*(r:CREA): bool = isSome(r.FNAM)
-func name*(r:CREA): Option[string] = r.FNAM
-func has_script*(r:CREA): bool = isSome(r.SCRI)
-func script_name*(r:CREA): Option[string] = r.SCRI
-func data*(r:CREA): CreatureData = r.NPDT
-func is_creature*(r:CREA): bool = data(r).kind == 0
-func is_daedra*(r:CREA): bool = data(r).kind == 1
-func is_undead*(r:CREA): bool = data(r).kind == 2
-func is_humanoid*(r:CREA): bool = data(r).kind == 3
-func level*(r:CREA): uint32 = data(r).level
-func attributes*(r:CREA): array[8,uint32] = data(r).attributes
-func attr_at(r:CREA,idx:AttributeRange): uint32 = attributes(r)[idx]
-func str*(r:CREA): uint32 = attr_at(r,0)
-func inte*(r:CREA): uint32 = attr_at(r,1)
-func will*(r:CREA): uint32 = attr_at(r,2)
-func agility*(r:CREA): uint32 = attr_at(r,3)
-func speed*(r:CREA): uint32 = attr_at(r,4)
-func endu*(r:CREA): uint32 = attr_at(r,5)
-func pers*(r:CREA): uint32 = attr_at(r,6)
-func luck*(r:CREA): uint32 = attr_at(r,7)
-func health*(r:CREA): uint32 = data(r).health
-func spell_pts*(r:CREA): uint32 = data(r).spell_pts
-func fatigue*(r:CREA): uint32 = data(r).fatigue
-func soul_lvl*(r:CREA): uint32 = data(r).soul
-func petty_soul*(r:CREA): bool = soul_lvl(r) <= PETTY_SOUL
-func lesser_soul*(r:CREA): bool = soul_lvl(r) <= LESSER_SOUL
-func common_soul*(r:CREA): bool = soul_lvl(r) <= COMMON_SOUL
-func greater_soul*(r:CREA): bool = soul_lvl(r) <= GREATER_SOUL
-func grand_soul*(r:CREA): bool = soul_lvl(r) <= GRAND_SOUL
-func azura_soul*(r:CREA): bool = soul_lvl(r) <= AZURA_SOUL
-func combat*(r:CREA): uint32 = data(r).combat
-func magic*(r:CREA): uint32 = data(r).magic
-func stealth*(r:CREA): uint32 = data(r).stealth
+func id*(r): string = stripNull(r.NAME)
+func modelPath*(r): string = stripNull(r.MODL)
+func soundGen*(r): Option[string] = r.CNAM
+func hasName*(r): bool = isSome(r.FNAM)
+func name*(r): Option[string] = r.FNAM
+func hasScript*(r): bool = isSome(r.SCRI)
+func scriptName*(r): Option[string] = r.SCRI
+func data*(r): CreatureData = r.NPDT
+func isCreature*(r): bool = data(r).kind == 0
+func isDaedra*(r): bool = data(r).kind == 1
+func isUndead*(r): bool = data(r).kind == 2
+func isHumanoid*(r): bool = data(r).kind == 3
+func level*(r): uint32 = data(r).level
+func attributes*(r): array[8,uint32] = data(r).attributes
+func attrAt(r;idx:AttributeRange): uint32 = attributes(r)[idx]
+func str*(r): uint32 = attr_at(r,0)
+func inte*(r): uint32 = attr_at(r,1)
+func will*(r): uint32 = attr_at(r,2)
+func agility*(r): uint32 = attr_at(r,3)
+func speed*(r): uint32 = attr_at(r,4)
+func endu*(r): uint32 = attr_at(r,5)
+func pers*(r): uint32 = attr_at(r,6)
+func luck*(r): uint32 = attr_at(r,7)
+func health*(r): uint32 = data(r).health
+func spellPts*(r): uint32 = data(r).spell_pts
+func fatigue*(r): uint32 = data(r).fatigue
+func soulLvl*(r): uint32 = data(r).soul
+func pettySoul*(r): bool = soulLvl(r) <= PETTY_SOUL
+func lesserSoul*(r): bool = soulLvl(r) <= LESSER_SOUL
+func commonSoul*(r): bool = soulLvl(r) <= COMMON_SOUL
+func greaterSoul*(r): bool = soulLvl(r) <= GREATER_SOUL
+func grandSoul*(r): bool = soulLvl(r) <= GRAND_SOUL
+func azuraSoul*(r): bool = soulLvl(r) <= AZURA_SOUL
+func combat*(r): uint32 = data(r).combat
+func magic*(r): uint32 = data(r).magic
+func stealth*(r): uint32 = data(r).stealth
 # q how are the different attacks calculated?
-func attacks*(r:CREA): array[3,tuple[min,max:uint32]] = [(min:data(r).attackmin1,max:data(r).attackmax1),(min:data(r).attackmin2,max:data(r).attackmax2),(min:data(r).attackmin3,max:data(r).attackmax3)]
-func gold*(r:CREA): uint32 = data(r).gold
+func attacks*(r): array[3,tuple[min,max:uint32]] = [(min:data(r).attackmin1,max:data(r).attackmax1),(min:data(r).attackmin2,max:data(r).attackmax2),(min:data(r).attackmin3,max:data(r).attackmax3)]
+func gold*(r): uint32 = data(r).gold
 
 proc flags*(r): set[CreatureFlags] = 
     for _,f in creaFlagLookups:
         let (check,incl) = f
-        if has_flag(r.FLAG,check):
+        if hasFlag(r.FLAG,check):
             result.incl(incl)
 
-func scale*(r:CREA): float32 =
+func scale*(r): float32 =
     if isSome(r.XSCL):
         return get(r.XSCL)
     else:
         return 1.0
 
-func items*(r:CREA): seq[CarriedObject[uint32]] = r.NPCO
+func items*(r): seq[CarriedObject[uint32]] = r.NPCO
 
-proc search_items*(r:CREA,name:string): seq[CarriedObject[uint32]] = 
-    result = @[]
+proc searchItems*(r;name:string): seq[CarriedObject[uint32]] = 
     if len(items(r)) > 0:
-        let results = collect(newSeq):
+        result = collect(newSeq):
             for idx,m in items(r):
                 if editDistance(stripNull(m.name),name) <= 1:
                     m
-        result = results
 
-proc spells*(r:CREA): seq[string] = 
+proc spells*(r): seq[string] = 
     result = @[]
     for s in r.NPCS:
         result.add stripNull(s)
 
-proc ai_data*(r:CREA): AIData = r.AIDT
+proc aiData*(r): AIData = r.AIDT
 
-func hello*(r:CREA): uint8 = hello(ai_data(r))
-func fight*(r:CREA): uint8 = fight(ai_data(r))
-func flee*(r:CREA): uint8 = flee(ai_data(r))
-func alarm*(r:CREA): uint8 = alarm(ai_data(r))
-proc ai_flags*(r:CREA): set[AIServices] = flags(ai_data(r))
+func hello*(r): uint8 = hello(aiData(r))
+func fight*(r): uint8 = fight(aiData(r))
+func flee*(r): uint8 = flee(aiData(r))
+func alarm*(r): uint8 = alarm(aiData(r))
+proc aiFlags*(r): set[AIServices] = flags(aiData(r))
 
-func cell_travel_dests*(r:CREA): seq[CellTravelData] = seq[CellTravelData](r.DODT)
+func cellTravelDests*(r): seq[CellTravelData] = seq[CellTravelData](r.DODT)
 
-func ai_pkgs*(r:CREA): seq[AI_Package] = r.Pkgs
+func aiPkgs*(r): seq[AI_Package] = r.Pkgs
 
 
-proc `$`*(r:CREA): string = 
+proc `$`*(r): string = 
     result = "CREA"
     result.add `T$`(r)
 
-export travel_dest,prev_dest_name
+export travelDest,prevDestName

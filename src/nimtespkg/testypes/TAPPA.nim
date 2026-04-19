@@ -14,20 +14,20 @@ type
         weight: float32
         value: uint32
     APPA* = ref object of TES3Record
-        NAME: string
-        MODL: Option[string]
-        FNAM: Option[string]
-        SCRI: Option[string]
-        AADT: Option[ApparatusData]
-        ITEX: Option[string]
+        NAME {.dtag("ID").}: string
+        MODL {.dtag("Model Path").}: Option[string]
+        FNAM {.dtag("Name").}: Option[string]
+        SCRI {.dtag("Script Name").}: Option[string]
+        AADT {.dtag("Apparatus Data").}: Option[ApparatusData]
+        ITEX {.dtag("Icon Path").}: Option[string]
 
 using 
     r:APPA
 
 func id*(r): string = r.NAME
-func model_path*(r): Option[string] = r.MODL
+func modelPath*(r): Option[string] = r.MODL # ContainsMesh
 func name*(r): Option[string] = r.FNAM
-func script_name*(r): Option[string] = r.SCRI
+func scriptName*(r): Option[string] = r.SCRI # UsesScript
 func data*(r): Option[ApparatusData] = r.AADT
 
 func quality*(r): Option[float32] = 
@@ -40,7 +40,7 @@ func value*(r): Option[uint32] =
     if isSome(data(r)):
         result = some(get(data(r)).value)
 
-func icon_path*(r): Option[string] = r.ITEX
+func iconPath*(r): Option[string] = r.ITEX #Icon
 
 proc kind*(r): ApparatusKind = 
     result = AppaNone

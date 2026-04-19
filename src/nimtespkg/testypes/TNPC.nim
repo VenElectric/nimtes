@@ -27,12 +27,12 @@ type
         DODT: TagList[CellTravelData]
         Pkgs: seq[AI_Package]
 
-const FTFemale = flagtup(0x0001,NPFemale)
-const FTEssential = flagtup(0x0002,NPEssential)
-const FTRespawn = flagtup(0x0004,NPRespawn)
-const FTAUTOCALC = flagtup(0x0010,NPAutocalc)
-const FTBLOODSKELE = flagtup(0x0400,NPBloodSkele)
-const FTBLOODMETAL = flagtup(0x0800,NPBloodMetal)
+const FTFemale: (uint32,NPCFlags) = (0x0001,NPFemale)
+const FTEssential: (uint32,NPCFlags) = (0x0002,NPEssential)
+const FTRespawn: (uint32,NPCFlags) = (0x0004,NPRespawn)
+const FTAUTOCALC: (uint32,NPCFlags) = (0x0010,NPAutocalc)
+const FTBLOODSKELE: (uint32,NPCFlags) = (0x0400,NPBloodSkele)
+const FTBLOODMETAL: (uint32,NPCFlags) = (0x0800,NPBloodMetal)
 
 const npcFlagLookup = [FTFemale,FTEssential,FTRespawn,FTAUTOCALC,FTBLOODSKELE,FTBLOODMETAL]
 
@@ -40,36 +40,36 @@ using
     r:NPC
 
 func id*(r): string = r.NAME
-func model_path*(r): Option[string] = r.MODL
+func modelPath*(r): Option[string] = r.MODL
 func name*(r): Option[string] = r.FNAM
-func race_name*(r): string = r.RNAM
-func class_name*(r): string = r.CNAM
-func faction_name*(r): Option[string] = r.ANAM
-func head_model_path*(r): string = r.BNAM
-func hair_model_path*(r): Option[string] = r.KNAM
-func script_name*(r): Option[string] = r.SCRI
-func npc_flags*(r): set[NPCFlags] =
+func raceName*(r): string = r.RNAM
+func className*(r): string = r.CNAM
+func factionName*(r): Option[string] = r.ANAM
+func headModelPath*(r): string = r.BNAM
+func hairModelPath*(r): Option[string] = r.KNAM
+func scriptName*(r): Option[string] = r.SCRI
+func npcFlags*(r): set[NPCFlags] =
     for f in npcFlagLookup:
         let (check,incl) = f
-        if has_flag(r.flags,check):
+        if hasFlag(r.flags,check):
             result.incl incl
 func data*(r): NPCData = r.NPDT
-func npc_level*(r): uint16 = data(r).level
-func npc_disposition*(r):uint8 = data(r).disposition
-func npc_reputation*(r):uint8 = data(r).reputation
-func npc_gold*(r): uint32 = data(r).gold
+func npcLevel*(r): uint16 = data(r).level
+func npcDisposition*(r):uint8 = data(r).disposition
+func npcReputation*(r):uint8 = data(r).reputation
+func npcGold*(r): uint32 = data(r).gold
 func stats*(r): Option[NPCStats] = data(r).stats
 
-func ai_pkgs*(r): seq[AI_Package] = r.Pkgs
+func aiPkgs*(r): seq[AI_Package] = r.Pkgs
 
-proc ai_flags*(r): Option[set[AIServices]] =
+proc aiFlags*(r): set[AIServices] =
     if isSome(r.AIDT):
-        result = some(flags(get(r.AIDT)))
+        result = flags(get(r.AIDT))
 
 proc `$`*(r): string = 
     result = "NPC"
     result.add `T$`(r)
 
-export hello,fight,flee,alarm,travel_dest,prev_dest_name,attributes,skills,health,spell_points,fatigue
+export hello,fight,flee,alarm,travelDest,prevDestName,attributes,skills,health,spellPoints,fatigue
 
 

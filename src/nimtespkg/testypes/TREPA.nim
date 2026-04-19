@@ -19,7 +19,8 @@ using
     r:REPA
 
 func name*(r): string = stripNull(r.NAME)
-func model_path*(r): string = stripNull(r.MODL)
+func modelPath*(r): string = stripNull(r.MODL)
+func data*(r): RepairData = r.RIDT
 
 proc `$`*(r): string =
     result = "REPA"

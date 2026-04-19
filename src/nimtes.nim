@@ -1,5 +1,5 @@
 
-
+import nimtespkg/testypes
 
 when isMainModule:
    type 
@@ -7,5 +7,4 @@ when isMainModule:
 
    var x = MyObject()
    echo $MyObject
-   echo "hello world"
    

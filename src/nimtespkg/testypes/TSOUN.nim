@@ -14,10 +14,10 @@ using
     r:SOUN
 
 func id*(r): string = r.NAME
-func file_name*(r): string = r.FNAM
+func fileName*(r): string = r.FNAM
 func data*(r): AttenuationData = r.DATA
 func volume*(r): uint8 = data(r).vol
-func vol_range*(r): tuple[min: uint8, max:uint8] = 
+func volRange*(r): tuple[min: uint8, max:uint8] = 
     let d = data(r)
     result = (min: d.min_range,max:d.max_range)
 

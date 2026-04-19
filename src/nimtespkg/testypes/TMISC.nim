@@ -18,14 +18,14 @@ using
     r:MISC
 
 func id*(r): string = r.NAME
-func model_path*(r): string = r.MODL
+func modelPath*(r): string = r.MODL
 func name*(r): Option[string] = r.FNAM
 func data(r):MiscData = r.MCDT
 func weight*(r): float32 = data(r).weight
 func value*(r): uint32 = data(r).value
-func is_key*(r): bool = data(r).flags == 1
-func script_name*(r): Option[string] = r.SCRI
-func icon_path*(r): Option[string] = r.ITEX
+func isKey*(r): bool = data(r).flags == 1
+func scriptName*(r): Option[string] = r.SCRI
+func iconPath*(r): Option[string] = r.ITEX
 
 proc `$`*(r): string =
     result = "MISC"

@@ -44,42 +44,42 @@ using
     # and then use that to compare. maybe?
 
 func id*(r): string = r.INAM
-func prev_id*(r): string = r.PNAM
-func next_id*(r): string = r.NNAM
+func prevId*(r): string = r.PNAM
+func nextId*(r): string = r.NNAM
 func data*(r):Option[InfoData] = r.DATA
-proc dialogue_kind*(r: InfoData): DialogueKind = DialogueKind(r.kind)
+proc dialogueKind*(r: InfoData): DialogueKind = DialogueKind(r.kind)
 
 func disposition_or_journal*(r:InfoData): uint32 =
     result = r.disposition_journal
 
 func rank*(r: InfoData): int8 = r.rank
 
-func male_gender*(r:InfoData): bool = r.gender == 0
-func female_gender*(r:InfoData): bool = r.gender == 1
-func no_gender*(r:InfoData): bool = r.gender == -1
+func maleGender*(r:InfoData): bool = r.gender == 0
+func femaleGender*(r:InfoData): bool = r.gender == 1
+func noGender*(r:InfoData): bool = r.gender == -1
 
-func player_rank*(r:InfoData): int8 = r.pcrank
+func playerRank*(r:InfoData): int8 = r.pcrank
 
-func actor_name*(r): Option[string] = r.ONAM
-func race_name*(r): Option[string] = r.RNAM
-func class_name*(r): Option[string] = r.CNAM
-func faction_name*(r): Option[string] = r.FNAM
-func cell_name*(r): Option[string] = r.ANAM
-func pc_faction_name*(r): Option[string] = r.DNAM
-func sound_name*(r): Option[string] = r.SNAM
-func response_text*(r): Option[string] = r.NAME
-func result_text*(r): Option[string] = r.BNAM
+func actorName*(r): Option[string] = r.ONAM
+func raceName*(r): Option[string] = r.RNAM
+func className*(r): Option[string] = r.CNAM
+func factionName*(r): Option[string] = r.FNAM
+func cellName*(r): Option[string] = r.ANAM
+func pcFactionName*(r): Option[string] = r.DNAM
+func soundName*(r): Option[string] = r.SNAM
+func responseText*(r): Option[string] = r.NAME
+func resultText*(r): Option[string] = r.BNAM
 
-func script_vars*(r): seq[ScriptVar] = seq[ScriptVar](r.SCVR)
+func scriptVars*(r): seq[ScriptVar] = seq[ScriptVar](r.SCVR)
 
-func quest_name*(r): Option[int8] = r.QSTN
+func questName*(r): Option[int8] = r.QSTN
 
-func quest_finished*(r): Option[int8] = r.QSTF
+func questFinished*(r): Option[int8] = r.QSTF
 
-func quest_restart*(r): Option[int8] = r.QSTR
+func questRestart*(r): Option[int8] = r.QSTR
 
 # seems to be set to false in all cases....
-func quest_enum*(r): Option[int8] =
+func questEnum*(r): Option[int8] =
     if isSome(r.QSTN):
         return r.QSTN
     elif isSome(r.QSTF):
@@ -88,16 +88,16 @@ func quest_enum*(r): Option[int8] =
         return r.QSTR
 
 # want to make this a little more readable/etc
-func scr_str*(r:ScriptVar): string = r.SCVR
-func script_var_idx*(r:ScriptVar): char = scr_str(r)[0]
-func script_kind*(r:ScriptVar): char = scr_str(r)[1]
-func script_details*(r:ScriptVar): string = scr_str(r)[2..3]
-func script_op*(r:ScriptVar): char = scr_str(r)[4]
-func script_name*(r:ScriptVar): string =
-    let scr = scr_str(r)
+func scrStr*(r:ScriptVar): string = r.SCVR
+func scriptVarIdx*(r:ScriptVar): char = scrStr(r)[0]
+func scriptKind*(r:ScriptVar): char = scrStr(r)[1]
+func scriptDetails*(r:ScriptVar): string = scrStr(r)[2..3]
+func scriptOp*(r:ScriptVar): char = scrStr(r)[4]
+func scriptName*(r:ScriptVar): string =
+    let scr = scrStr(r)
     result = scr[5..high(scr)]
-func script_intv*(r:ScriptVar): uint32 = r.INTV
-func script_fltv*(r:ScriptVar): float32 = r.FLTV
+func scriptIntv*(r:ScriptVar): uint32 = r.INTV
+func scriptFltv*(r:ScriptVar): float32 = r.FLTV
 
 proc `$`*(r): string =
     result = "INFO"

@@ -18,12 +18,12 @@ type
         ENAM: Option[string]
 
 func id*(r:CLOT): string = r.NAME
-func model_path*(r:CLOT): string = r.MODL
+func modelPath*(r:CLOT): string = r.MODL
 func name*(r:CLOT): Option[string] = r.FNAM
 func data*(r:CLOT): ClothingData = r.CTDT
-func script_name*(r:CLOT): Option[string] = r.SCRI
-func icon_path*(r:CLOT): Option[string] = r.ITEX
-func body_data*(r:CLOT): seq[BipedObject] = seq[BipedObject](r.INDX)
+func scriptName*(r:CLOT): Option[string] = r.SCRI
+func iconPath*(r:CLOT): Option[string] = r.ITEX
+func bodyData*(r:CLOT): seq[BipedObject] = seq[BipedObject](r.INDX)
 func enchantment*(r:CLOT): Option[string] = r.ENAM
 
 proc `$`*(r:CLOT): string =
