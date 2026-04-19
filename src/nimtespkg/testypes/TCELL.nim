@@ -83,6 +83,7 @@ using
     r:CELL
 
 proc data*(r): CellData = r.DATA
+proc grid*(r): (int32,int32) = (data(r).gridx,data(r).gridy)
 
 func mapColor*(r): Option[RGBA] = r.NAM5
 

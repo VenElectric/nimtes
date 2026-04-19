@@ -65,13 +65,13 @@ proc add*(rc:var RecordConflicts,message:string) =
 func createMessage*(what,initial,change:string): string = 
     fmt"{what} changed from {initial} to {change}"
 
-func missingFile(what,path:string): string = fmt"{what} file missing: {path}"
-func missingMeshFile*(path:string): string = missingFile("Mesh",path)
-func missingMusicFile*(path:string): string = missingFile("Music",path)
-func missingIconFile*(path:string): string = missingFile("Icon",path)
-func missingTextureFile*(path:string): string = missingFile("Texture",path)
-func missingFontFile*(path:string): string = missingFile("Font",path)
-func missingSoundFile*(path:string): string = missingFile("Sound",path)
+func missingFile(what:string,path:Path): string = fmt"{what} file missing: {path}"
+func missingMeshFile*(path:Path): string = missingFile("Mesh",path)
+func missingMusicFile*(path:Path): string = missingFile("Music",path)
+func missingIconFile*(path:Path): string = missingFile("Icon",path)
+func missingTextureFile*(path:Path): string = missingFile("Texture",path)
+func missingFontFile*(path:Path): string = missingFile("Font",path)
+func missingSoundFile*(path:Path): string = missingFile("Sound",path)
 
 
 proc getPluginFiles*(c:TES3Cfg): seq[string] = 
@@ -110,9 +110,35 @@ proc createSoundPath*(tesPath:Path,file:string): Path = tesPath / DATA_FILES / M
 
 proc checkPath*(p:Path): bool = fileExists(p)
 
+proc checkMeshHelper*(tesPath:Path,file:string,msgs:var seq[string]): string =
+    let p = createMeshPath(tesPath,file)
+    if not checkPath(p):
+        msgs.add missingMeshFile(p)
+
+proc checkMusicHelper*(tesPath:Path,file:string,msgs:var seq[string]) =
+    let p = createMusicPath(tesPath,file)
+    if not checkPath(p):
+        msgs.add missingMusicFile(p)
+
+proc checkTextureHelper*(tesPath:Path,file:string,msgs:var seq[string]) =
+    let p = createTexturePath(tesPath,file)
+    if not checkPath(p):
+        msgs.add missingTextureFile(p)
+
+proc checkIconHelper*(tesPath:Path,file:string,msgs:var seq[string]): string =
+    let p = createIconPath(tesPath,file)
+    if not checkPath(p):
+        msgs.add missingIconFile(p)
+
+proc checkSoundHelper*(tesPath:Path,file:string,msgs:var seq[string]) =
+    let p = createSoundPath(tesPath,file)
+    if not checkPath(p):
+        msgs.add missingSoundFile(p)
+
+
 proc check*[T:SomeFloat|SomeInteger|string|bool](l,r:Option[T],what:string,msgs:var seq[string])
 proc check*[T:object](l,r:Option[T],what:string,msgs:var seq[string])
-proc check(one,two:BipedObject,msgs:var seq[string]): seq[string]
+
 
 proc check*(l,r:SomeInteger,what:string,msgs:var seq[string]) = 
     if l != r:
@@ -170,17 +196,26 @@ proc simpleCheck[T:TES3Record](one,two:T):seq[string] =
                     check(ovalue,tvalue,getCustomPragmaVal(ovalue,dtag),result)
                 break
 
-proc check(one,two:BipedObject,msgs:var seq[string]): seq[string] = 
-    check(itemSlot(one),itemSlot(two),"Biped Item Slot",msgs)
-    check(maleName(one),maleName(two),"Male Name for Item",msgs)
-    check(femaleName(one),femaleName(two),"Female Name for Item",msgs)
+
 
 proc bipedMatch(one,two:BipedObject): bool = result = itemSlot(one) == itemSlot(two)
 
-proc check*(one,two:ACTI): seq[string] = simpleCheck(one,two)
-proc check*(one,two:ALCH): seq[string] = simpleCheck(one,two)
-proc check*(one,two:APPA): seq[string] = simpleCheck(one,two)
-proc check*(one,two:ARMO): seq[string] = 
+# need to ensure these simple check ones have dtags
+proc check*(tesPath:Path,one,two:ACTI): seq[string] = 
+    result = simpleCheck(one,two)
+    checkMeshHelper(tesPath,modelPath(two),result)
+
+proc check*(tesPath:Path,one,two:ALCH): seq[string] = 
+    result = simpleCheck(one,two)
+    checkMeshHelper(tesPath,modelPath(two),result)
+    checkIconHelper(tesPath,iconPath(two),result)
+
+proc check*(tesPath:Path,one,two:APPA): seq[string] = 
+    result = simpleCheck(one,two)
+    checkMeshHelper(tesPath,modelPath(two),result)
+    checkIconHelper(tesPath,iconPath(two),result)
+
+proc check*(tesPath:Path,one,two:ARMO): seq[string] = 
     result = @[]
     check(modelPath(one),modelPath(two),"Model Path",result)
     check(name(one),name(two),"Name",result)
@@ -195,14 +230,39 @@ proc check*(one,two:ARMO): seq[string] =
     check(enchantName(one),enchantName(two),"Enchantment Name",result)
     if len(bodyData(one)) != len(bodyData(two)):
         result.add fmt"Number of Biped Objects differs: {len(bodyData(one))} -> {len(bodyData(two))}"
-    for bp in bodyData(one):
-        let twoBD = bodyData(two)
-        let res = filter(twoBD,proc(b:BipedObject): bool = bipedMatch(bp,b))
-        
+    let itemSlotsOne = listItemSlots(one)
+    let itemSlotsTwo = listItemSlots(two)
+    for slot in itemSlotsOne:
+        let f = find(itemSlotsTwo,slot)
+        if f == -1:
+            result.add fmt"Item slot: {slot} not found in {id(two)} record"
+    checkMeshHelper(tesPath,modelPath(two),result)
+    checkIconHelper(tesPath,iconPath(two),result)
+
+proc check*(tesPath:Path,one,two:BODY): seq[string] = 
+    result = @[]
+    checkMeshHelper(tesPath,modelPath(two),result)
+    check(modelPath(one),modelPath(two),"Model Path",result)
+    check(race(one),race(two),"Race",result)
+    check(bodyPart(one),bodyPart(two),"Body Part",result)
+    check(isVampire(one),isVampire(two),"Vampire Status",result)
+    check(isFemale(one),isFemale(two),"Female Gender Status",result)
+    check(isPlayable(one),isPlayable(two),"Playable Status",result)
+    check(partKind(one),partKind(two),"Kind of Body Part",result)
+    
+proc check*(tesPath:Path,one,two:CELL): seq[string] =
+    result = @[]
+    check(name(one),name(two),"Cell Name",result)
+    check(region(one),region(two),"Region Name",result)
+    check(flags(one),flags(two),"Cell Flags",result)
+    let (x1,y1) = grid(one)
+    let (x2,y2) = grid(two)
+    check(x1,x2,"Grid Data: X Pos",result)
+    check(y1,y2,"Grid Data: Y Pos",result)
 
 
 
-proc `$`*(cd:RecordConflicts): string = 
+proc `$`(cd:RecordConflicts): string = 
     result = fmt"__{cd.id}__" & "\n"
     for msg in cd.messages:
         result.add indent("- " & msg,INDENTAMT) & "\n"
