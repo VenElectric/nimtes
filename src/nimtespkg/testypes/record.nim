@@ -311,10 +311,13 @@ type
 
 
 
-
+template zsize*(sz:int) {.pragma.}
+template dtag*(d:string) {.pragma.}
 
 
 type
+    Grid3D*[T:SomeInteger|SomeUnsignedInt] = tuple[x,y,z:T]
+    Grid*[T:SomeInteger|SomeUnsignedInt] = tuple[x,y:T]
     AttributeRange* = range[0..7]
     SkillRange* = range[0..26]
     EffectRange* = range[0..142]
@@ -324,20 +327,16 @@ type
     TES3Record* = ref object of RootObj
         size*: uint32
         flags*: uint32
-    RGBA* = ref object of DataField
+    RGBA* = object
         r*: uint8
         g*: uint8
         b*: uint8
         a*: uint8
-    RGB* = ref object of DataField
+    RGB* = object
         r*: uint8
         g*: uint8
         b*: uint8
-    RGBO* = object # only used for LAND...so that readField(array) will work properly. ref object takes up a smidge of space...and thus fucks over the read operation
-        r*: uint8
-        g*: uint8
-        b*: uint8
-    Coords* = ref object of DataField
+    Coords* = ref object of DataField # Coords are specific to CELL....
         x*: int32
         y*: int32
     CellPosition* = ref object of DataField
@@ -442,10 +441,6 @@ type
         uses*:uint32
 
 
-proc hasFlag*(flags,value: uint32): bool = result = (value and (not flags)) == 0
-
-template zsize*(sz:int) {.pragma.}
-template dtag*(d:string) {.pragma.}
 template mesh*() {.pragma.}
 template music*() {.pragma.}
 template texture*() {.pragma.}
@@ -453,6 +448,16 @@ template font*() {.pragma.}
 template icon*() {.pragma.}
 template sound*() {.pragma.}
 template skipField*() {.pragma.}
+
+
+func toColor*(r: RGBA): Color = rgb(r.r, r.g, r.b)
+func toColor*(r: RGB): Color = rgb(r.r, r.g, r.b)
+
+proc `$`*(r: RGBA): string = $toColor(r)
+proc `$`*(r: RGB): string = $toColor(r)
+proc `$`*[T:SomeInteger](r:Grid[T]): string = $(r.x,r.y)
+
+proc hasFlag*(flags,value: uint32): bool = result = (value and (not flags)) == 0
 
 # SpecializationKind
 proc specAssert*(r: SomeUnsignedInt) = 
@@ -497,15 +502,6 @@ proc toEffects*[R,T:SomeInteger|SomeUnsignedInt](r:array[R,T]): array[R,EffectIn
 func itemCount*[T:int32|uint32](r:CarriedObject[T]): T = r.count
 func itemName*[T:int32|uint32](r:CarriedObject[T]): string = stripNull(r.name)
 
-
-func toColor*(r: RGBA): Color = rgb(r.r, r.g, r.b)
-func toColor*(r: RGB): Color = rgb(r.r, r.g, r.b)
-func toColor*(r: RGBO): Color = rgb(r.r, r.g, r.b)
-
-proc `$`*(r: RGBA): string = $toColor(r)
-proc `$`*(r: RGB): string = $toColor(r)
-proc `$`*(r: RGBO): string = $toColor(r)
-
 proc deleFlag*(r: TES3Record): bool = has_flag(r.flags, 0x0020)
 proc persistRef*(r: TES3Record): bool = has_flag(r.flags, 0x0400)
 proc initDisabled*(r: TES3Record): bool = has_flag(r.flags, 0x0800)
@@ -516,24 +512,24 @@ func fight*(r: AIData): uint8 = r.fight
 func flee*(r: AIData): uint8 = r.flee
 func alarm*(r: AIData): uint8 = r.alarm
 
-const SERV_WEAP = (AI_WEAPON,AWeapon)
-const SERV_ARMO = (AI_ARMOR,AArmor)
-const SERV_CLOTH = (AI_CLOTH,AClothing)
-const SERV_BOOKS = (AI_BOOKS,ABooks)
-const SERV_INGR = (AI_INGR,AIngr)
-const SERV_PICK = (AI_PICKS,APicks)
-const SERV_PROB = (AI_PROBES,AProbes)
-const SERV_LIGHT = (AI_LIGHTS,ALights)
-const SERV_APPA = (AI_APPA,AAppa)
-const SERV_MISC = (AI_MISC,AMisc) 
-const SERV_REPA_ITEM = (AI_RPITEMS,ARepairItems)
-const SERV_SPEL = (AI_SPELLS,ASpells)
-const SERV_MAGIC_ITEM = (AI_MGITEM,AMagic)
-const SERV_POTION = (AI_POTIONS,APotions)
-const SERV_TRAIN = (AI_TRAIN,ATraining)
-const SERV_SPELL_MAKE = (AI_SPELLMAKING,ASpellmaking)
-const SERV_ENCHANT = (AI_ENCHANT,AEnchant)
-const SERV_REPAIR = (AI_REPAIR,ARepair)
+const SERV_WEAP: (uint32,AIServices) = (AI_WEAPON,AWeapon)
+const SERV_ARMO: (uint32,AIServices) = (AI_ARMOR,AArmor)
+const SERV_CLOTH: (uint32,AIServices) = (AI_CLOTH,AClothing)
+const SERV_BOOKS: (uint32,AIServices) = (AI_BOOKS,ABooks)
+const SERV_INGR: (uint32,AIServices) = (AI_INGR,AIngr)
+const SERV_PICK: (uint32,AIServices) = (AI_PICKS,APicks)
+const SERV_PROB: (uint32,AIServices) = (AI_PROBES,AProbes)
+const SERV_LIGHT: (uint32,AIServices) = (AI_LIGHTS,ALights)
+const SERV_APPA: (uint32,AIServices) = (AI_APPA,AAppa)
+const SERV_MISC: (uint32,AIServices) = (AI_MISC,AMisc) 
+const SERV_REPA_ITEM: (uint32,AIServices) = (AI_RPITEMS,ARepairItems)
+const SERV_SPEL: (uint32,AIServices) = (AI_SPELLS,ASpells)
+const SERV_MAGIC_ITEM: (uint32,AIServices) = (AI_MGITEM,AMagic)
+const SERV_POTION: (uint32,AIServices) = (AI_POTIONS,APotions)
+const SERV_TRAIN: (uint32,AIServices) = (AI_TRAIN,ATraining)
+const SERV_SPELL_MAKE: (uint32,AIServices) = (AI_SPELLMAKING,ASpellmaking)
+const SERV_ENCHANT: (uint32,AIServices) = (AI_ENCHANT,AEnchant)
+const SERV_REPAIR: (uint32,AIServices) = (AI_REPAIR,ARepair)
 
 const aiServiceLookup = [SERV_APPA,SERV_ARMO,SERV_BOOKS,SERV_CLOTH,SERV_ENCHANT,SERV_INGR,SERV_LIGHT,SERV_MAGIC_ITEM,SERV_MISC,SERV_PICK,SERV_POTION,
                         SERV_PROB,SERV_REPA_ITEM,SERV_REPAIR,SERV_SPEL,SERV_SPELL_MAKE,SERV_TRAIN,SERV_WEAP]
@@ -632,6 +628,7 @@ proc `T$`*[T](r: seq[T]): string =
     result.add join(items,",\n")
     result.add "]\n"
 proc `T$`*[T:enum](r:T): string = $r
+proc `T$`*[T:SomeInteger](r:Grid[T]): string = $r
 proc `T$`*[T](r: TagList[T]): string = result = `T$`(seq[T](r))
 proc `T$`*(r: ScriptData): string = result = "len:" & $len(seq[uint8](r))
 proc `T$`*[T](r: ref T): string = `T$`(r[])

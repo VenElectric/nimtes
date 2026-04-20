@@ -141,6 +141,8 @@ proc readfield(s; dst: var FollowerData; tags: var TagFields)
 proc readField(s;dst: var NPCData;tags: var Tagfields)
 proc readField(s;dst: var ScriptData;tags: var TagFields)
 proc readField*(s;dst: var WeatherChances;tags: var TagFields)
+proc readField(s;dst: var RGB,tags: var TagFields)
+proc readField(s;dst: var RGBA,tags: var TagFields)
 
 proc readField(s; dst: var char; tags: var TagFields) =
     dst = s.readChar()
@@ -201,7 +203,6 @@ proc getFieldNames[T: object](o: T): seq[string] =
 
 # workaround...for some reason readField[T:DataField] makes compiler
 # yell that var T is invalid for one of these types
-# putting them in one function makes compiler yell that dst.name can not be assigned to
 
 proc readField(s; dst: var ActivatePkg; tags: var TagFields) =
     dst.name = readStr(s, getCustomPragmaVal(dst.name, zsize))
@@ -253,6 +254,16 @@ proc readField(s; dst: var seq[AI_Package]; tags: var TagFields) =
         next(tags)
         dst.add AI_Package(kind: Wander, AI_W: temp)
     else: return
+
+proc readField(s;dst: var RGB,tags: var TagFields) = 
+    setPosition(s,peek(tags).pos)
+    read(s,dst)
+    next(tags)
+
+proc readField(s;dst: var RGBA,tags: var TagFields) = 
+    setPosition(s,peek(tags).pos)
+    read(s,dst)
+    next(tags)
 
 proc readField[T: DataField](s; dst: var T; tags: var TagFields) =
     setPosition(s, peek(tags).pos)
@@ -370,8 +381,6 @@ proc readField*(s;dst: var WeatherChances;tags: var TagFields) =
     next(tags)
 
 proc readField[T: object](s; dst: var T; tags: var Tagfields) =
-    if atEnd(tags):
-        return
     while not atEnd(tags):
         setPosition(s, peek(tags).pos)
         readObjectImpl(s, dst, tags)

@@ -1,4 +1,4 @@
-import std/[tables,strformat,paths,files,dirs,options]
+import std/[tables,strformat,paths,files,dirs,options,colors]
 import util,tescfg,testypes
 from macros import getCustomPragmaVal,hasCustomPragma
 from strutils import replace,endsWith,indent
@@ -110,47 +110,55 @@ proc createSoundPath*(tesPath:Path,file:string): Path = tesPath / DATA_FILES / M
 
 proc checkPath*(p:Path): bool = fileExists(p)
 
-proc checkMeshHelper*(tesPath:Path,file:string,msgs:var seq[string]): string =
+proc checkMeshHelper*(tesPath:Path,file:string,msgs:var seq[string])=
     let p = createMeshPath(tesPath,file)
     if not checkPath(p):
         msgs.add missingMeshFile(p)
+
+proc checkMeshHelper*(tesPath:Path,file:Option[string],msgs:var seq[string]) =
+    if isSome(file):
+        checkMeshHelper(tesPath,get(file),msgs)
 
 proc checkMusicHelper*(tesPath:Path,file:string,msgs:var seq[string]) =
     let p = createMusicPath(tesPath,file)
     if not checkPath(p):
         msgs.add missingMusicFile(p)
 
+proc checkMusicHelper*(tesPath:Path,file:Option[string],msgs:var seq[string]) = 
+    if isSome(file):
+        checkMusicHelper(tesPath,get(file),msgs)
+
 proc checkTextureHelper*(tesPath:Path,file:string,msgs:var seq[string]) =
     let p = createTexturePath(tesPath,file)
     if not checkPath(p):
         msgs.add missingTextureFile(p)
 
-proc checkIconHelper*(tesPath:Path,file:string,msgs:var seq[string]): string =
+proc checkTextureHelper*(tesPath:Path,file:Option[string],msgs:var seq[string]) = 
+    if isSome(file):
+        checkTextureHelper(tesPath,get(file),msgs)
+
+proc checkIconHelper*(tesPath:Path,file:string,msgs:var seq[string]) =
     let p = createIconPath(tesPath,file)
     if not checkPath(p):
         msgs.add missingIconFile(p)
+
+proc checkIconHelper*(tesPath:Path,file:Option[string],msgs:var seq[string]) = 
+    if isSome(file):
+        checkIconHelper(tesPath,get(file),msgs)
 
 proc checkSoundHelper*(tesPath:Path,file:string,msgs:var seq[string]) =
     let p = createSoundPath(tesPath,file)
     if not checkPath(p):
         msgs.add missingSoundFile(p)
 
+proc checkSoundHelper*(tesPath:Path,file:Option[string],msgs:var seq[string]) = 
+    if isSome(file):
+        checkSoundHelper(tesPath,get(file),msgs)
 
-proc check*[T:SomeFloat|SomeInteger|string|bool](l,r:Option[T],what:string,msgs:var seq[string])
-proc check*[T:object](l,r:Option[T],what:string,msgs:var seq[string])
 
 
-proc check*(l,r:SomeInteger,what:string,msgs:var seq[string]) = 
-    if l != r:
-        msgs.add createMessage(what,$l,$r)
-proc check*(l,r:SomeFloat,what:string,msgs:var seq[string]) = 
-    if l != r:
-        msgs.add createMessage(what,$l,$r)
-proc check*(l,r,what:string,msgs:var seq[string]) = 
-    if l != r:
-        msgs.add createMessage(what,l,r)
 
-proc check*[T:enum](l,r:T,what:string,msgs:var seq[string]) = 
+proc check*[T:enum|string|SomeFloat|SomeInteger|Color|bool](l,r:T,what:string,msgs:var seq[string]) = 
     if l != r:
         msgs.add createMessage(what,$l,$r)
 
@@ -159,31 +167,75 @@ proc check*[T:enum](l,r:set[T],what:string,msgs:var seq[string]) =
         if not r.contains(v):
             msgs.add fmt"{v} not found in {what} for this plugin"
 
-# what, from, to
-#(string,string,string)
+
+proc check*[T:SomeInteger](l,r:Grid[T],what:string,msgs:var seq[string]) = 
+    if l.x != r.x and l.y != r.y:
+        msgs.add createMessage(what,$l,$r)
+
+
+proc check*[T:enum|string|SomeFloat|SomeInteger|bool](l,r:Option[T],what:string,msgs:var seq[string])
+proc check*[T:object](l,r:Option[T],what:string,msgs:var seq[string])
+proc check*[T:object](l,r:T,what:string,msgs:var seq[string])
+
+proc check*[T:object](l,r:ref T,what:string,msgs:var seq[string]) = 
+    for lkey,lvalue in fieldPairs(l[]):
+        for rkey,rvalue in fieldPairs(r[]):
+            when lkey == rkey:
+                check(lvalue,rvalue,what & "." & lkey,msgs)
+                break
+
+# could maybe use tables here instead....
+# need to remember to skip over the junk values...maybe label those or 
+# use a pragma
 proc check*[T:object](l,r:T,what:string,msgs:var seq[string]) = 
     for lkey,lvalue in fieldPairs(l):
         for rkey,rvalue in fieldPairs(r):
-            if lkey == rkey:
+            when lkey == rkey:
                 check(lvalue,rvalue,what & "." & lkey,msgs)
                 break
 
 
-proc check*[T:SomeFloat|SomeInteger|string|bool](l,r:Option[T],what:string,msgs:var seq[string]) =
+proc check*[T:enum|string|SomeFloat|SomeInteger|bool](l,r:Option[T],what:string,msgs:var seq[string]) =
     if l != r:
         if isSome(l) and isNone(r):
-            msgs.add createMessage(what,get(l),"None")
+            msgs.add createMessage(what,$get(l),"None")
         elif isNone(l) and isSome(r):
-            msgs.add createMessage(what,"None",get(r))
+            msgs.add createMessage(what,"None",$get(r))
         elif isSome(l) and isSome(r):
-            msgs.add createMessage(what,get(l),get(r))
+            msgs.add createMessage(what,$get(l),$get(r))
 
+proc check(l,r:FormRef,what:string,msgs: var seq[string]) = 
+    check(refName(l),refName(r),what & ":Reference Name",msgs)
+    check(refBlocked(l),refBlocked(r),what & ":Reference Blocked",msgs)
+    check(scale(l),scale(r),what & ":Reference Scale",msgs)
+    check(npcId(l),npcId(r),what & ":NPC ID",msgs) # hopefully one wouldn't change NPC ids on a ref id???
+    check(globalVar(l),globalVar(r),what & ":Global Variable Name",msgs)
+    check(factionId(l),factionId(r),what & ":Faction ID",msgs)
+    check(factionRank(l),factionRank(r),what & ":Faction Rank",msgs)
+    check(soulId(l),soulId(r),what & ":Soul Gem ID",msgs)
+    check(soulId(l),soulId(r),what & ":Soul Gem ID",msgs)
+    check(charge(l),charge(r),what & ":Soul Gem Charge",msgs)
+    check(usageLeft(l),usageLeft(r),what & ":Item Usage Left",msgs)
+    check(value(l),value(r),what & ":Item Value",msgs)
+    # cell travel destinations
+    check(lockDiff(l),lockDiff(r),what & ":Lock Difficulty",msgs)
+    check(refDisabled(l),refDisabled(r),what & ":Reference Disabled",msgs)
+    # Cell position
+
+proc check(l,r:MovedRef,what:string,msgs: var seq[string]) = 
+    check(movedRefCellName(l),movedRefCellName(r),what & ": Cell Name",msgs)
+    # coords
+    check(movedRef(l),movedRef(r),what,msgs)
+
+proc check[T](l,r:seq[T],what:string,msgs: var seq[string]) = discard
+
+# object equality....probably won't work unless we have defined object equality for each
 proc check*[T:object](l,r:Option[T],what:string,msgs:var seq[string]) =
     if l != r:
         if isSome(l) and isNone(r):
-            msgs.add createMessage(what,get(l),"None")
+            msgs.add "Data removed from plugin"
         elif isNone(l) and isSome(r):
-            msgs.add createMessage(what,"None",get(r))
+            msgs.add "Data added to plugin"
         elif isSome(l) and isSome(r):
             check(get(l),get(r),what,msgs)
 
@@ -193,12 +245,12 @@ proc simpleCheck[T:TES3Record](one,two:T):seq[string] =
         for tkey,tvalue in fieldPairs(two[]):
             when okey == tkey:
                 when hasCustomPragma(ovalue,dtag):
+                    
                     check(ovalue,tvalue,getCustomPragmaVal(ovalue,dtag),result)
+                    # gets messy for seq values...maybe
                 break
 
 
-
-proc bipedMatch(one,two:BipedObject): bool = result = itemSlot(one) == itemSlot(two)
 
 # need to ensure these simple check ones have dtags
 proc check*(tesPath:Path,one,two:ACTI): seq[string] = 
@@ -254,11 +306,54 @@ proc check*(tesPath:Path,one,two:CELL): seq[string] =
     result = @[]
     check(name(one),name(two),"Cell Name",result)
     check(region(one),region(two),"Region Name",result)
-    check(flags(one),flags(two),"Cell Flags",result)
-    let (x1,y1) = grid(one)
-    let (x2,y2) = grid(two)
-    check(x1,x2,"Grid Data: X Pos",result)
-    check(y1,y2,"Grid Data: Y Pos",result)
+    check(cellPos(one),cellPos(two),"Cell Position",result)
+    check(cellFlags(one),cellFlags(two),"Cell Flags",result)
+    check(mapColor(one),mapColor(two),"Map Color",result)
+    check(waterHeight(one),waterHeight(two),"Water Height",result)
+    if isSome(ambientLight(one)) and isSome(ambientLight(two)):
+        let l = get(ambientLight(one))
+        let r = get(ambientLight(two))
+        check(ambientColor(l),ambientColor(r),"Ambient Color",result)
+        check(sunColor(l),sunColor(r),"Sun Color",result)
+        check(fogColor(l),fogColor(r),"Fog Color",result)
+        check(fogDensity(l),fogDensity(r),"Fog Density",result)
+    elif isNone(ambientLight(one)) and isSome(ambientLight(two)):
+        result.add "Plugin adds ambient color values. None were listed prior."
+    elif isSome(ambientLight(one)) and isNone(ambientLight(two)):
+        result.add "Plugin removes ambient color values."
+    let mvrfOne = movedRefs(one)
+    let mvrfTwo = movedRefs(two)
+    if len(mvrfOne) != len(mvrfTwo):
+        result.add "Number of Moved References changed from " & $len(mvrfOne) & " to " & $len(mvrfTwo)
+    for mvrf in mvrfOne:
+        let rfTwo = findMovedReference(two,movedRefId(mvrf))
+        if isSome(rfTwo):
+            check(mvrf,get(rfTwo),"Moved Reference: " & $movedRefId(mvrf),result)
+    
+    let persistOne = persistentChildren(one)
+    let persistTwo = persistentChildren(two)
+    if len(persistOne) != len(persistTwo):
+        result.add "Number of Persistent Children changed from " & $len(persistOne) & " to " & $len(persistTwo)
+    for pChld in persistOne:
+        let pChldTwo = findPersistReference(two,refId(pChld))
+        if isSome(pChldTwo):
+            check(pChld,get(pChldTwo ),"Persistent Child: " & $refId(pChld),result)
+        else:
+            result.add "Persistent child " & "(" & $refId(pChld) & ") removed from plugin."
+
+    let tempOne = temporaryChildren(one)
+    let tempTwo = temporaryChildren(two)
+    if len(tempOne) != len(tempTwo):
+        result.add "Number of Persistent Children changed from " & $len(tempOne) & " to " & $len(tempTwo)
+    for tChld in tempOne:
+        let tChldTwo = findTempChild(two,refId(tChld))
+        if isSome(tChldTwo):
+            check(tChld,get(tChldTwo),"Persistent Child: " & $refId(tChld),result)
+        else:
+            result.add "Persistent child " & "(" & $refId(tChld) & ") removed from plugin."
+
+
+    
 
 
 
