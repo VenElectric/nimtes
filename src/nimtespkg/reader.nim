@@ -1,6 +1,5 @@
 import std/[streams, macros, options, strformat,tables,parsecfg]
 from lexbase import NewLines
-import util
 import testypes
 using
     s: Stream
@@ -37,7 +36,12 @@ proc consumeTag*(s) = discard readTag(s)
 
 func peek*(t: TagFields): TagPos = t.current
 
-proc createTag(s): TagPos =
+proc createRecordTag(s): TagPos =
+    result.pos = getPosition(s)
+    result.name = readTag(s)
+    result.size = readSize(s)
+
+proc createSubTag(s): TagPos =
     result.name = readTag(s)
     result.size = readSize(s)
     result.pos = getPosition(s)
@@ -57,7 +61,7 @@ proc filter*(tf:TagFields,p:FilterFunc): TagFields =
             result.add t
 
 proc next*(t: var TagFields) =
-    if t.cursor > len(t.tags)-1:
+    if t.cursor > high(t.tags):
         t.atEnd = true;
         return
     inc(t.cursor)
@@ -68,29 +72,27 @@ proc next*(t: var TagFields) =
 proc getSubLevelOffsets*(s): TagFields =
     result = TagFields()
     result.tags = @[]
-    var p = TagPos(name: readTag(s), size: readSize(s))
+    # skip RECORD level tag string but get size
+    consumeTag(s)
+    let size = readSize(s)
     skip(s, 8) # flags and unused
-    p.pos = getPosition(s)
-    result.add p
-    let eot = getPosition(s) + int(p.size)
+    let eot = getPosition(s) + int(size)
     while getPosition(s) < eot:
-
-        let tag = createTag(s)
+        let tag = createSubTag(s)
         result.add tag
         skip(s, tag.size)
 
 proc getRecordCounts*(s): CountTable[string] = 
     while not atEnd(s):
-        let tag = readTag(s)
+        result.inc readTag(s)
         let size = readSize(s)
-        result.inc tag
         skip(s,size + 8)
 
 proc getRecordOffsets*(s): TagFields = 
     result = TagFields()
     setPosition(s,0)
     while not atEnd(s):
-        let tag = createTag(s)
+        let tag = createRecordTag(s)
         result.add tag
         skip(s,tag.size+8)
 
@@ -99,7 +101,7 @@ proc getRecordOffsetsOfType*(s;tag:string): TagFields =
     setPosition(s,0)
     while not atEnd(s):
         if peekTag(s) == tag:
-            let tag = createTag(s)
+            let tag = createRecordTag(s)
             result.add tag
             skip(s,tag.size+8)
         else:
@@ -111,8 +113,7 @@ proc getRecordOffsetsOfType*(s;tag:string): TagFields =
 
 proc checkSize*(actual: uint32; tags: TagFields) =
     var calc: uint32 = 0
-    for i in 1..len(tags.tags)-1:
-        let tag = tags.tags[i]
+    for tag in items(tags):
         calc = calc + tag.size + 8
     assert(actual == calc, fmt"Actual: {actual}, calc {calc}")
 
@@ -419,8 +420,6 @@ proc readRecord*[T: TES3Record](s; dst: typedesc[T]): T =
     let pos = getPosition(s)
 
     var tags = getSubLevelOffsets(s)
-
-    next(tags) 
     next(tags)
 
     setPosition(s, pos)
@@ -440,18 +439,10 @@ proc readAllRecordofType*[T:TES3Record](s;dst:typedesc[T]): seq[T] =
     var key = $dst
     if key == "NPC":
         key = "NPC_"
-    while not atEnd(s):
-        let tag = peekTag(s)
-        if tag == key:
-            let sPos = getPosition(s)
-            let rec = readRecord(s,dst)
-            result.add rec
-            setPosition(s,sPos+8)
-            skip(s,rec.size+8)
-        else:
-            consumeTag(s)
-            let size = readSize(s)
-            skip(s,size+8)
+    var tags = getRecordOffsetsOfType(s,key)
+    for tag in items(tags):
+        setPosition(s,tag.pos)
+        result.add readRecord(s,dst)
 
 # morrowind.ini comes with at least one
 # key=value pair that is just key=
