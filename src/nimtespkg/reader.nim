@@ -453,6 +453,14 @@ proc readAllRecordofType*[T:TES3Record](s;dst:typedesc[T]): seq[T] =
             let size = readSize(s)
             skip(s,size+8)
 
+# morrowind.ini comes with at least one
+# key=value pair that is just key=
+# base nim parser just errors out here instead of treating it as key=""
+# override this behavior for now, as I'm not sure that 
+# re-writing the ini as key="" would be viable, or how
+# morrowind would react
+# though if we wanted to save the ini file...
+# it would write key=""
 proc readMorrowindIni*(iniPath:string): Config = 
     result = newConfig()
     var cfg = CfgParser()

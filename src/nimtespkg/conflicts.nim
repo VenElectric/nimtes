@@ -3,6 +3,19 @@ import util,tescfg,testypes
 from macros import getCustomPragmaVal,hasCustomPragma
 from strutils import replace,endsWith,indent
 
+# conflicts should detect
+# differences in values/removal/additions
+# objects/landscapes/structures clipping
+# floating objects
+# pathgrids going to nowhere
+# npcs not in the right spot/stuck/etc...
+# bad gmsts (but only as a warning, as some are bad on purpose)
+# conflicts should also verify file paths 
+# and thus should verify that files reference in the main plugin
+# research:
+    # bad gmsts
+    # other conflicts that might cause issues
+
 type
 
     RecordConflicts* = object
@@ -268,14 +281,18 @@ proc simpleCheck[T:TES3Record](one,two:T):seq[string] =
 
 
 # need to ensure these simple check ones have dtags
+# where one is the quarantined plugin, and two is one of many plugins
+# being checked
+# what if two changes the file path of one?
 proc check*(tesPath:Path,one,two:ACTI): seq[string] = 
     result = simpleCheck(one,two)
-    checkMeshHelper(tesPath,modelPath(two),result)
+
+    checkMeshHelper(tesPath,modelPath(one),result)
 
 proc check*(tesPath:Path,one,two:ALCH): seq[string] = 
     result = simpleCheck(one,two)
-    checkMeshHelper(tesPath,modelPath(two),result)
-    checkIconHelper(tesPath,iconPath(two),result)
+    checkMeshHelper(tesPath,modelPath(one),result)
+    checkIconHelper(tesPath,iconPath(one),result)
 
 proc check*(tesPath:Path,one,two:APPA): seq[string] = 
     result = simpleCheck(one,two)
@@ -326,6 +343,14 @@ proc check*(tesPath:Path,one,two:BODY): seq[string] =
 # BOTH
 # validate pathgrid against obstacles (walls, tables, etc...)
 # if NPC or object, validate position (i.e. not in a wall)
+
+# all cell references are not always in plugins. only those that are changed are in the plugin
+# the plugin overwrites the original reference's data
+# need to take the base reference and then compare that to the plugin
+# if the plugin overwrites it.
+# ie. Morrowind.esm base
+# Barabus Cell elmussa (the main plugin being check)
+# rebirth cell elmussa (one of many plugins being checked against barabus)
 
 proc interiorReferenceChecks*() = discard
 proc exteriorReferenceChecks*() = discard

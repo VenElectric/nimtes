@@ -26,3 +26,16 @@ when isMainModule:
    close(r)
    close(m)
    
+# FRMR:165694
+#       NAME:furn_de_rug_big_04
+#       XSCL:1.3800001
+#       DODT:[
+#       ]
+      
+#       DATA:
+#         posx:650.989
+#         posy:-14.896167
+#         posz:381.18677
+#         rotx:0.0
+#         roty:0.0
+#         rotz:0.0},
