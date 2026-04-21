@@ -620,10 +620,9 @@ proc `T$`*[T](r: seq[T]): string =
     var items:seq[string] = @[]
     for i in r:
         var collect:string
-        collect.add "{\n"
+        collect.add "{"
         collect.add `T$` i
-        collect.add "\n"
-        collect.add "}\n"
+        collect.add "}"
         items.add collect
     result.add join(items,",\n")
     result.add "]\n"
@@ -635,11 +634,12 @@ proc `T$`*[T](r: ref T): string = `T$`(r[])
 proc `T$`*[T: object](r: T): string =
     result = ""
     for key, value in fieldPairs(r):
-        result.add "\n"
         when value is Option:
             if isSome(value):
+                result.add "\n"
                 result.add indent(key & ":" & stripNull(`T$`(get(value))), INDENT)
         else:
+            result.add "\n"
             result.add indent(key & ":" & stripNull(`T$`(value)), INDENT)
 
 proc `T$`*[T: TES3Record](r: T): string =

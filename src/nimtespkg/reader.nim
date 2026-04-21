@@ -26,7 +26,7 @@ const PREAMBLE = 16
 proc readTag*(s): string = readStr(s, TAGSIZE)
 proc peekTag*(s): string = peekStr(s, TAGSIZE)
 proc skip*(s; pos: Natural) = setPosition(s, getPosition(s) + pos)
-proc skipPreamble*(s) = setPosition(s, getPosition(s)+PREAMBLE)
+proc skipPreamble*(s) = skip(s,PREAMBLE)
 
 proc goback*(s; pos: Natural) = setPosition(s, getPosition(s) - pos)
 
@@ -206,7 +206,7 @@ proc getFieldNames[T: object](o: T): seq[string] =
 
 proc readField(s; dst: var ActivatePkg; tags: var TagFields) =
     dst.name = readStr(s, getCustomPragmaVal(dst.name, zsize))
-    read(s, dst.unknown)
+    read(s, dst.unknown) # we could ideally remove these from the object and just "skip" them
 
 proc readfield(s; dst: var FollowerData; tags: var TagFields) =
     read(s, dst.x)
@@ -214,7 +214,7 @@ proc readfield(s; dst: var FollowerData; tags: var TagFields) =
     read(s, dst.z)
     read(s, dst.duration)
     dst.id = readStr(s, getCustomPragmaVal(dst.id, zsize))
-    read(s, dst.unknown)
+    read(s, dst.unknown) # we could ideally remove these from the object and just "skip" them
     read(s, dst.unused)
 
 

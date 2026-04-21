@@ -176,6 +176,7 @@ proc check*[T:SomeInteger](l,r:Grid[T],what:string,msgs:var seq[string]) =
 proc check*[T:enum|string|SomeFloat|SomeInteger|bool](l,r:Option[T],what:string,msgs:var seq[string])
 proc check*[T:object](l,r:Option[T],what:string,msgs:var seq[string])
 proc check*[T:object](l,r:T,what:string,msgs:var seq[string])
+proc check[T](l,r:seq[T],what:string,msgs: var seq[string])
 
 proc check*[T:object](l,r:ref T,what:string,msgs:var seq[string]) = 
     for lkey,lvalue in fieldPairs(l[]):
@@ -183,6 +184,17 @@ proc check*[T:object](l,r:ref T,what:string,msgs:var seq[string]) =
             when lkey == rkey:
                 check(lvalue,rvalue,what & "." & lkey,msgs)
                 break
+
+proc check*(l,r:AlchemyData,_:string,msgs:var seq[string]) = 
+    check(weight(l),weight(r),"Alchemical Item Weight",msgs)
+    check(value(l),value(r),"Alchemical Item Value",msgs)
+    check(autoCalc(l),autoCalc(r),"Alchemical Item Flag: AutoCalc",msgs)
+
+proc check*(l,r:ApparatusData,_:string,msgs: var seq[string]) =
+    check(kind(l),kind(r),"Type of Apparatus",msgs)
+    check(quality(l),quality(r),"Apparatus Quality",msgs)
+    check(weight(l),weight(r),"Apparatus Weight",msgs)
+    check(value(l),value(r),"Apparatus Value",msgs)
 
 # could maybe use tables here instead....
 # need to remember to skip over the junk values...maybe label those or 
@@ -193,6 +205,7 @@ proc check*[T:object](l,r:T,what:string,msgs:var seq[string]) =
             when lkey == rkey:
                 check(lvalue,rvalue,what & "." & lkey,msgs)
                 break
+
 
 
 proc check*[T:enum|string|SomeFloat|SomeInteger|bool](l,r:Option[T],what:string,msgs:var seq[string]) =
@@ -217,25 +230,27 @@ proc check(l,r:FormRef,what:string,msgs: var seq[string]) =
     check(charge(l),charge(r),what & ":Soul Gem Charge",msgs)
     check(usageLeft(l),usageLeft(r),what & ":Item Usage Left",msgs)
     check(value(l),value(r),what & ":Item Value",msgs)
-    # cell travel destinations
     check(lockDiff(l),lockDiff(r),what & ":Lock Difficulty",msgs)
     check(refDisabled(l),refDisabled(r),what & ":Reference Disabled",msgs)
-    # Cell position
 
 proc check(l,r:MovedRef,what:string,msgs: var seq[string]) = 
     check(movedRefCellName(l),movedRefCellName(r),what & ": Cell Name",msgs)
     # coords
     check(movedRef(l),movedRef(r),what,msgs)
 
-proc check[T](l,r:seq[T],what:string,msgs: var seq[string]) = discard
+proc check[T](l,r:seq[T],what:string,msgs: var seq[string]) = 
+    let lenLeft = len(l)
+    let lenRight = len(r)
+    if lenLeft != lenRight:
+        msgs.add fmt"Number of {what} changed from {lenLeft} to {lenRight}"
 
 # object equality....probably won't work unless we have defined object equality for each
 proc check*[T:object](l,r:Option[T],what:string,msgs:var seq[string]) =
     if l != r:
         if isSome(l) and isNone(r):
-            msgs.add "Data removed from plugin"
+            msgs.add "Plugin removes data"
         elif isNone(l) and isSome(r):
-            msgs.add "Data added to plugin"
+            msgs.add "Plugin adds data"
         elif isSome(l) and isSome(r):
             check(get(l),get(r),what,msgs)
 
@@ -301,7 +316,20 @@ proc check*(tesPath:Path,one,two:BODY): seq[string] =
     check(isFemale(one),isFemale(two),"Female Gender Status",result)
     check(isPlayable(one),isPlayable(two),"Playable Status",result)
     check(partKind(one),partKind(two),"Kind of Body Part",result)
-    
+
+# INTERIOR
+# validate that reference has not moved
+
+# EXTERIOR
+# validate that landscape/housing/objects are not clipping (not sure how to do this)
+
+# BOTH
+# validate pathgrid against obstacles (walls, tables, etc...)
+# if NPC or object, validate position (i.e. not in a wall)
+
+proc interiorReferenceChecks*() = discard
+proc exteriorReferenceChecks*() = discard
+
 proc check*(tesPath:Path,one,two:CELL): seq[string] =
     result = @[]
     check(name(one),name(two),"Cell Name",result)
@@ -323,17 +351,17 @@ proc check*(tesPath:Path,one,two:CELL): seq[string] =
         result.add "Plugin removes ambient color values."
     let mvrfOne = movedRefs(one)
     let mvrfTwo = movedRefs(two)
-    if len(mvrfOne) != len(mvrfTwo):
-        result.add "Number of Moved References changed from " & $len(mvrfOne) & " to " & $len(mvrfTwo)
+    check(mvrfOne,mvrfTwo,"Moved References",result)
     for mvrf in mvrfOne:
         let rfTwo = findMovedReference(two,movedRefId(mvrf))
         if isSome(rfTwo):
             check(mvrf,get(rfTwo),"Moved Reference: " & $movedRefId(mvrf),result)
+        else:
+            result.add "Moved Reference " & "(" & $movedRefId(mvrf) & ") removed from plugin."
     
     let persistOne = persistentChildren(one)
     let persistTwo = persistentChildren(two)
-    if len(persistOne) != len(persistTwo):
-        result.add "Number of Persistent Children changed from " & $len(persistOne) & " to " & $len(persistTwo)
+    check(persistOne,persistTwo,"Persistent Children",result)
     for pChld in persistOne:
         let pChldTwo = findPersistReference(two,refId(pChld))
         if isSome(pChldTwo):
@@ -343,8 +371,7 @@ proc check*(tesPath:Path,one,two:CELL): seq[string] =
 
     let tempOne = temporaryChildren(one)
     let tempTwo = temporaryChildren(two)
-    if len(tempOne) != len(tempTwo):
-        result.add "Number of Persistent Children changed from " & $len(tempOne) & " to " & $len(tempTwo)
+    check(tempOne,tempTwo,"Temporary Children",result)
     for tChld in tempOne:
         let tChldTwo = findTempChild(two,refId(tChld))
         if isSome(tChldTwo):

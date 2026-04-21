@@ -17,20 +17,10 @@ type
 
 using 
     r: ALCH
-    s:Stream
+    ad:AlchemyData
 
-proc autoCalc*(r): bool = 
-    result = false
-    if isSome(r.ALDT):
-        result = hasFlag(get(r.ALDT).flags,AUTO_CALC)
-
-func weight*(r): Option[float32] = 
-    if isSome(r.ALDT):
-        result = some(get(r.ALDT).weight)
-
-func value*(r): Option[uint32] = 
-    if isSome(r.ALDT):
-        result = some(get(r.ALDT).value)
+proc `==`*(l,r:AlchemyData): bool = 
+    l.weight == r.weight and l.value == r.value and l.flags == r.flags
 
 func id*(r): string = stripNull(r.NAME)
 func modelPath*(r): Option[string] = r.MODL
@@ -38,6 +28,11 @@ func iconPath*(r): Option[string] = r.TEXT
 func scriptName*(r): Option[string] = r.SCRI
 func name*(r): Option[string] = r.FNAM
 func enchants*(r): seq[EnchantmentData] = r.ENAM
+func data*(r): Option[AlchemyData] = r.ALDT
+
+proc autoCalc*(ad): bool = hasFlag(ad.flags,AUTO_CALC)
+func weight*(ad): float32 = ad.weight
+func value*(ad): uint32 = ad.value
 
 
 proc `$`*(r): string =
