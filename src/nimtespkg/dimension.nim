@@ -28,4 +28,13 @@
     # or does duplication only happen when you have landscapes/structures with different names
     # in the same place? or both?
 
+type
+    Vector3*[T:SomeInteger|SomeFloat|byte] = object
+        x,y,z:T
+    Vector4*[T:SomeInteger|SomeFloat|byte] = object 
+        x,y,z,w:T
+    Quaternion*[T:SomeInteger|SomeFloat|byte] = object
+        w,x,y,z:T
+    Matrix*[R,C:Natural,T:SomeInteger|SomeFloat|byte] = array[R,array[C,T]]
+
 

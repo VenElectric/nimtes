@@ -49,7 +49,7 @@ func nextId*(r): string = r.NNAM
 func data*(r):Option[InfoData] = r.DATA
 proc dialogueKind*(r: InfoData): DialogueKind = DialogueKind(r.kind)
 
-func disposition_or_journal*(r:InfoData): uint32 =
+func dispositionJournalIndex*(r:InfoData): uint32 =
     result = r.disposition_journal
 
 func rank*(r: InfoData): int8 = r.rank

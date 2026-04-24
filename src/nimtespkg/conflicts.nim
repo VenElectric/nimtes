@@ -349,7 +349,7 @@ proc check*(tesPath:Path,one,two:BODY): seq[string] =
 # need to take the base reference and then compare that to the plugin
 # if the plugin overwrites it.
 # ie. Morrowind.esm base
-# Barabus Cell elmussa (the main plugin being check)
+# Barabus Cell elmussa (the main plugin being checked)
 # rebirth cell elmussa (one of many plugins being checked against barabus)
 
 proc interiorReferenceChecks*() = discard

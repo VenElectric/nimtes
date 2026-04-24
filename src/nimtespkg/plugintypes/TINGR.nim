@@ -27,7 +27,7 @@ func data*(r): IngredientData = r.IRDT
 
 func weight*(r): float32 = data(r).weight
 func value*(r): uint32 = data(r).value
-func effects*(r): array[4,EffectIndex] = to_effects(data(r).effects) 
+func effects*(r): array[4,EffectIndex] = toEffects(data(r).effects) 
 func skills*(r): array[4,int32] = data(r).skills # this and attributes are sucky, because a "none" value can be 0 or -1, 
 # while other records use -1 to mean no value.
 func attrs*(r): array[4,int32] = data(r).attrs # ^^^^^^^

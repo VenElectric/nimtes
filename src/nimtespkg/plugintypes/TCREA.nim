@@ -119,7 +119,7 @@ func attacks*(r): array[3,tuple[min,max:uint32]] = [(min:data(r).attackmin1,max:
 func gold*(r): uint32 = data(r).gold
 
 proc flags*(r): set[CreatureFlags] = 
-    for _,f in creaFlagLookups:
+    for f in creaFlagLookups:
         let (check,incl) = f
         if hasFlag(r.FLAG,check):
             result.incl(incl)

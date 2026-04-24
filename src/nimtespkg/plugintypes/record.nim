@@ -447,7 +447,6 @@ template texture*() {.pragma.}
 template font*() {.pragma.}
 template icon*() {.pragma.}
 template sound*() {.pragma.}
-template skipField*() {.pragma.}
 
 
 func toColor*(r: RGBA): Color = rgb(r.r, r.g, r.b)
