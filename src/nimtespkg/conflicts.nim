@@ -390,7 +390,7 @@ proc check*(tesPath:Path,one,two:CELL): seq[string] =
     for pChld in persistOne:
         let pChldTwo = findPersistReference(two,refId(pChld))
         if isSome(pChldTwo):
-            check(pChld,get(pChldTwo ),"Persistent Child: " & $refId(pChld),result)
+            check(pChld,get(pChldTwo),"Persistent Child: " & $refId(pChld),result)
         else:
             result.add "Persistent child " & "(" & $refId(pChld) & ") removed from plugin."
 

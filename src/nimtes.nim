@@ -1,11 +1,11 @@
-import std/[xmltree,xmlparser,tables,strutils,streams]
+import std/[xmltree,xmlparser,tables,strutils,streams,options]
 from sequtils import filter
 from algorithm import reversed
-
+import nimtespkg/[reader,testypes]
 type
-   NINode = ref object
+   NINodeRead = ref object
       name: string
-      children: seq[NINode]
+      children: seq[NINodeRead]
    NIVersion = tuple[major,minor,patch,inter:uint]
 
 proc newVersion(a,b,c,d:uint): NIVersion = (major:a,minor:b,patch:c,inter:d)
@@ -19,20 +19,17 @@ proc toVersion*(v:string): NiVersion =
 
 const MORROVERS = newVersion(4,0,0,2)
 
-proc add(n:var NINode,c:NINode) = n.children.add c
+proc add(n:var NINodeRead,c:NINodeRead) = n.children.add c
 
-proc newNode(name:string): NINode = 
-   result = new NINode
+proc newNode(name:string): NINodeRead = 
+   result = new NINodeRead
    result.name = name
    result.children = @[]
 
-# NiObject
-# NiParticleModifier
-# NiGravity
 proc getFilter(objs:seq[XmlNode],parent:string): seq[XmlNode] =
    result = filter(objs,proc(x:XmlNode): bool = attr(x,"inherit") == parent)
 
-proc recurseInheritPath(objs:seq[XmlNode],parent:var NINode) =
+proc recurseInheritPath(objs:seq[XmlNode],parent:var NINodeRead) =
    let nodes = getFilter(objs,parent.name)
    if len(nodes) > 0:
       for node in nodes:
@@ -72,62 +69,27 @@ proc getMorrowindObjects*(root:XmlNode): seq[XmlNode] =
    result = filterMorrowindNodes(findAll(root,"enum") & findAll(root,"bitfields") & findAll(root,"niobject") & findAll(root,"struct"))
 
 
-proc getInheritPath(root:XmlNode): NINode = 
+proc getInheritPath(root:XmlNode): NINodeRead = 
    var objs = filterMorrowindNodes(findAll(root,"niobject"))
    result = newNode("NiObject")
    recurseInheritPath(objs,result)
-      
 
-
-# NiObject
-   # Ni3dsColorAnimator
-   # bhkRefObject
-      # bhkSerializable
-         # bhkWorldObject
-            # bhkPhantom
-               # bhkAabbPhantom
-   # NiParticleModifier
-      # NiGravity
-
-# NiObject
-   # NiParticleModifier
-      # NiGravity
-   # ********
-   # NiParticleModifier
-      # NiParticleBomb
-   # ********
-   # NiParticleModifier
-      # NiParticleColorModifier
-   # ********
-   # NiParticleModifier
-      # NiParticleGrowFade
-   # ********
-   # NiParticleModifier
-      # NiParticleMeshModifier
-   # ********
-   # NiParticleModifier
-      # NiParticleRotation
-   # ********
-   # NiParticleModifier
-      # NiParticleCollider
-         # NiPlanarCollider
-
-proc recurseNINode(r:NINode,fp:File,nodes:var seq[string]) =
+proc recurseNINodeRead(r:NINodeRead,fp:File,nodes:var seq[string]) =
    nodes.add(r.name)
    if len(r.children) > 0:
       for c in r.children:
-         recurseNINode(c,fp,nodes)
+         recurseNINodeRead(c,fp,nodes)
          discard nodes.pop()
    else:
       for n in reversed(nodes):
          write(fp,n & "\n")
       write(fp,"********\n")
 
-proc recurseNINode(r:NINode,fp:File) = 
+proc recurseNINodeRead(r:NINodeRead,fp:File) = 
    var root: seq[string] = @[]
-   recurseNINode(r,fp,root)
+   recurseNINodeRead(r,fp,root)
 
-proc writeNITypes(r:NINode,fp:File) = 
+proc writeNITypes(r:NINodeRead,fp:File) = 
    if len(r.children) > 0:
       write(fp,"*******" & r.name & "******\n")
       for c in r.children:
@@ -135,15 +97,15 @@ proc writeNITypes(r:NINode,fp:File) =
       for c in r.children:
          writeNITypes(c,fp)
 
-proc writeInheritLists(r:NINode) =
+proc writeInheritLists(r:NINodeRead) =
    let fp = open("MorrowindNifObjects.txt",fmWrite)
    defer: close(fp)
    writeNITypes(r,fp)
 
-proc writeInheritTrees(r:NINode) = 
+proc writeInheritTrees(r:NINodeRead) = 
    let fp = open("MorrowindNifTree.txt",fmWrite)
    defer: close(fp)
-   recurseNINode(r,fp)
+   recurseNINodeRead(r,fp)
 
 const OtherChars = {'_','.'}
 
@@ -155,19 +117,11 @@ proc readUntilNotAscii*(s:Stream):string =
    while (isAlphaNumeric(peekChar(s)) or peekChar(s) in OtherChars) and not atEnd(s):
       result.add readChar(s)
 
-when isMainModule:
-   let s = newFileStream("Morrowind/Data Files/Meshes/f/Furn_rug_big_04.nif")
 
-   
-   while not atEnd(s):
-      readUntilAscii(s)
-      let str = readUntilNotAscii(s)
-      if len(str) > 3:
-         echo str
+var y = 10
+
+when defined(CHANGE_Y):
+   y = 50
       
-   
-
-
-         
-   
-
+when isMainModule:
+   echo y

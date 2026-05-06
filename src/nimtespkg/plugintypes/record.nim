@@ -454,7 +454,9 @@ func toColor*(r: RGB): Color = rgb(r.r, r.g, r.b)
 
 proc `$`*(r: RGBA): string = $toColor(r)
 proc `$`*(r: RGB): string = $toColor(r)
-proc `$`*[T:SomeInteger](r:Grid[T]): string = $(r.x,r.y)
+
+
+proc `$`*(r:Coords): string = $(r.x,r.y)
 
 proc hasFlag*(flags,value: uint32): bool = result = (value and (not flags)) == 0
 

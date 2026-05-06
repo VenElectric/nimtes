@@ -1,3 +1,4 @@
+import std/math
 # calculate the space of an interior cell
 # need NIF properties for this I think
 # i.e. some cell walls are basically the floor, wall, and ceiling
@@ -28,13 +29,28 @@
     # or does duplication only happen when you have landscapes/structures with different names
     # in the same place? or both?
 
+# Goal: Learn about calculating dimensions of objects in 3D space
+# i.e. objects made up of triangles. 
+
 type
-    Vector3*[T:SomeInteger|SomeFloat|byte] = object
-        x,y,z:T
-    Vector4*[T:SomeInteger|SomeFloat|byte] = object 
-        x,y,z,w:T
-    Quaternion*[T:SomeInteger|SomeFloat|byte] = object
+    Vector3* = object
+        x,y,z:float32
+    Vector4* = object 
+        x,y,z,w:float32
+    Quaternion*[T:SomeInteger|SomeFloat] = object
         w,x,y,z:T
-    Matrix*[R,C:Natural,T:SomeInteger|SomeFloat|byte] = array[R,array[C,T]]
+    Matrix*[T:SomeInteger|SomeFloat] = object
+        cols:Natural
+        rows:Natural
+        matrix:seq[T]
+
+proc square(v:float32): float32 = pow(v,2)
+
+proc distance*(a,b:Vector3): float32 = 
+    result = sqrt(square(b.x - a.x) + square(b.y - a.y) + square(b.z - a.z))
+
+
+
+
 
 

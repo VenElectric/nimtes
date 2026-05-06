@@ -1,16 +1,32 @@
 import ../dimension
+# NifHeader
 # NiNode
 # NiStringExtraData
-# NiTriShape
+# NiTriShape <-- 
 # NiAlphaProperty
 # NiTexturingProperty
 # NiSourceTexture
 # NiMaterialProperty
-# NiTriShapeData
+# NiTriShapeData <-- 
+
+# what is the difference
 
 
-
+# NiGeometryDataFlags
 type
+  NiGeometryDataFlags* = enum
+    NumUVSets,
+    HavokMaterial,
+    NBTMethod
+  AlphaFlags* = enum
+    BlendAlpha,
+    BlendSource,
+    BlendDestination,
+    AlphaTest,
+    FuncTest,
+    NoSorter,
+    CloneUnique,
+    AlphaThreshold
   TexturingMapFlags* = enum 
     TextureIndex,
     FilterMode,
@@ -319,11 +335,11 @@ type
     USE_NIBOUND,
   BoundVolumeKind* = enum
     BVBASE,
-    BVSPHERE,
-    BVBOX,
-    BVCAPSULE,
-    BVUNION,
-    BVHALFSPACE,
+    BVSPHERE, # 0
+    BVBOX, # 1
+    BVCAPSULE, # 2
+    BVUNION, # 4
+    BVHALFSPACE,# 5
   FogFunction* = enum
     FOG_Z_LINEAR,
     FOG_RANGE_SQ,
@@ -514,7 +530,7 @@ type
       easeSpinner:float32
     PixelFormatComponent* = object
 
-
+export Vector3,Vector4,Matrix,Quaternion
     
 # <option value="0xffffffff" name="BASE_BV">Default</option>
 #         <option value="0" name="SPHERE_BV">Sphere</option>
